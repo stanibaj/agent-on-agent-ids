@@ -238,6 +238,10 @@ The judge is instructed to use only these IDs.
 - Verdicts are probabilistic. Validate on your own traces, watch the false-positive rate, and keep humans in the loop for response.
 - The bundled fixtures are synthetic and small. The numbers above show the judge works; they are not a benchmark.
 
+## Contributing
+
+Want to add another observability platform, a detection rule, an agent profile or a taxonomy update? See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 Apache-2.0
