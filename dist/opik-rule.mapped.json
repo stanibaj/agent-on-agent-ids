@@ -10,7 +10,7 @@
   "filters": [],
   "code": {
     "model": {
-      "name": "openai/gpt-5.2",
+      "name": "~anthropic/claude-haiku-latest",
       "temperature": 0.0
     },
     "messages": [

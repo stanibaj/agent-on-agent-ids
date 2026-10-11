@@ -82,3 +82,49 @@ class Judge:
             verdict["_usage"] = data.get("usage", {})
             return verdict
         raise error
+
+
+class DecisionJudge:
+    """Run the decision-model variant (e.g. TypeSafe Jev) exactly as Opik does: one state string plus one
+    yes/no question per BOOLEAN score, through OpenRouter's Decisions API."""
+
+    def __init__(self, model: str | None = None, url: str | None = None, api_key: str | None = None,
+                 profile_file: str | None = None, spec: Spec | None = None, timeout: float = 120,
+                 threshold: float = 0.5):
+        self.spec = spec or Spec()
+        self.model = model or self.spec.decision["default_model"]
+        self.url = url or os.environ.get("AOA_DECISIONS_URL", "https://openrouter.ai/api/alpha/decisions")
+        key = api_key or os.environ.get("AOA_RUNNER_API_KEY") or os.environ.get("OPENROUTER_API_KEY")
+        self.http = httpx.Client(timeout=timeout, headers={"Authorization": f"Bearer {key}"} if key else {})
+        self.threshold = threshold
+        self.state = self.spec.decision_state(profile_file or os.environ.get("AOA_AGENT_PROFILE_FILE"))
+        self.questions = {q["name"]: {"type": "noul", "instructions": " ".join(q["question"].split())}
+                          for q in self.spec.decision["questions"]}
+
+    def render(self, **variables: Any) -> str:
+        values = {k: _as_text(v) for k, v in variables.items()}
+        return VAR_PATTERN.sub(lambda x: values.get(x.group(1), ""), self.state)
+
+    def evaluate(self, *, input: Any, output: Any, trajectory: Any) -> dict[str, Any]:
+        response = self.http.post(self.url, json={"model": self.model, "state": self.render(
+            input=input, output=output, trajectory=trajectory), "questions": self.questions})
+        response.raise_for_status()
+        data = response.json()
+        probabilities = {name: answer["noul"] for name, answer in data["answers"].items()}
+        answers = {name: p >= self.threshold for name, p in probabilities.items()}
+        mapping = self.spec.decision_mapping(answers)
+        categories = [n.removeprefix("aoa_ids_cat_") for n, yes in answers.items() if yes and n.startswith("aoa_ids_cat_")]
+        incident = answers["aoa_ids_incident"]
+        return {
+            "incident": incident,
+            # Opik stores each BOOLEAN independently; mirror that, and let consumers combine them.
+            "alert": answers["aoa_ids_alert"],
+            "confidence": probabilities["aoa_ids_incident"] if incident else 1 - probabilities["aoa_ids_incident"],
+            "categories": categories,
+            "owasp_llm": mapping.get("owasp_llm", []), "owasp_asi": mapping.get("owasp_asi", []),
+            "atlas": mapping.get("atlas", []), "attack": mapping.get("attack", []),
+            "probabilities": probabilities,
+            "reason": f"categories:{','.join(categories) or '-'} | p_incident:{probabilities['aoa_ids_incident']:.2f} "
+                      f"| p_alert:{probabilities['aoa_ids_alert']:.2f}",
+            "_usage": data.get("usage", {}),
+        }

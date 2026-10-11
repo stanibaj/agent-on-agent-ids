@@ -16,5 +16,5 @@
     "score": "1 if the verdict's `incident` is true, else 0",
     "reasoning": "the verdict's `reason` line (OWASP/ATLAS/ATT&CK mapping + evidence)"
   },
-  "recommended_model": "openai/gpt-5.2"
+  "recommended_model": "~anthropic/claude-haiku-latest"
 }

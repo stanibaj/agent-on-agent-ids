@@ -25,6 +25,13 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("target", choices=["opik"])
         if name == "install":
             p.add_argument("--dry-run", action="store_true", help="print the payloads instead of calling the API")
+            p.add_argument("--smoke-test", action="store_true",
+                           help="after installing, log 5 test traces (3 attacks, 2 benign) and verify the verdicts")
+            p.add_argument("--keep-smoke-traces", action="store_true", help="do not delete the smoke-test traces")
+
+    p = sub.add_parser("smoke-test", help="run only the 5-trace smoke test against an installed judge")
+    p.add_argument("target", choices=["opik"])
+    p.add_argument("--keep-smoke-traces", action="store_true")
 
     p = sub.add_parser("export", help="write import-ready files to dist/")
     p.add_argument("targets", nargs="*", choices=list(exports.TARGETS), help="default: all")
@@ -43,8 +50,16 @@ def main(argv: list[str] | None = None) -> int:
                 project_id = "<project-id>"
                 print(json.dumps({"rule": opik.rule_payload(spec, settings, project_id),
                                   "alerts": opik.alert_payloads(spec, settings, project_id)}, indent=2))
-            else:
-                print("\n".join(opik.install(spec, settings)))
+            elif not opik.install(spec, settings, smoke=args.smoke_test, keep_smoke=args.keep_smoke_traces):
+                return 1
+        elif args.command == "smoke-test":
+            client = opik.OpikClient(settings)
+            project_id = client.project_id(settings.opik_project)
+            if not client.find_rule(project_id, settings.rule_name):
+                print(f"error: rule {settings.rule_name} not found; run `aoa-ids install opik` first", file=sys.stderr)
+                return 1
+            if not opik.smoke_test(client, spec, settings, project_id, print, keep=args.keep_smoke_traces):
+                return 1
         elif args.command == "uninstall":
             print("\n".join(opik.uninstall(spec, settings)))
         elif args.command == "status":

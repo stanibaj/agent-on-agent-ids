@@ -1,5 +1,5 @@
 {
-  "model": "openai/gpt-5.2",
+  "model": "~anthropic/claude-haiku-latest",
   "temperature": 0,
   "messages": [
     {

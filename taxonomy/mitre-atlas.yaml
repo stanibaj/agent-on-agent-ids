@@ -5,6 +5,7 @@ prefix: ATLAS
 # Subset relevant to attacks on tool-using agents. IDs and names taken from
 # mitre-atlas/atlas-data dist/v6/ATLAS-2026.09.yaml.
 items:
+  - {id: AML.T0051, name: LLM Prompt Injection}
   - {id: AML.T0051.000, name: "LLM Prompt Injection: Direct"}
   - {id: AML.T0051.001, name: "LLM Prompt Injection: Indirect"}
   - {id: AML.T0051.002, name: "LLM Prompt Injection: Triggered"}

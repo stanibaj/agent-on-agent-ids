@@ -52,6 +52,27 @@ class Spec:
             raise ValueError("agent profile must not contain '{{' or '}}' (template syntax)")
         return text
 
+    @property
+    def decision(self) -> dict:
+        return self.data["decision"]
+
+    def is_decision_model(self, model: str) -> bool:
+        return model in self.decision["models"]
+
+    def decision_state(self, profile_file: str | None = None) -> str:
+        """Single text the decision model reads: data only, agent profile inlined, {{var}} placeholders."""
+        return self._read(self.decision["state"]).replace("{{agent_profile}}", self.profile_text(profile_file))
+
+    def decision_mapping(self, answers: dict[str, bool]) -> dict[str, list[str]]:
+        """Taxonomy IDs implied by the category questions answered yes."""
+        mapping: dict[str, list[str]] = {}
+        for question in self.decision["questions"]:
+            if answers.get(question["name"]):
+                for framework, ids in question.get("maps", {}).items():
+                    mapping.setdefault(framework, [])
+                    mapping[framework] += [i for i in ids if i not in mapping[framework]]
+        return mapping
+
     def variables(self, mode: str) -> list[str]:
         return list(self.data["prompt"]["modes"][mode]["variables"])
 

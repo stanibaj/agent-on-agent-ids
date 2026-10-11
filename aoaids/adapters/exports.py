@@ -16,10 +16,28 @@ PROJECT_PLACEHOLDER = "<YOUR_OPIK_PROJECT_ID>"
 
 def _opik_rules(spec: Spec, settings: Settings) -> dict[str, str]:
     out = {}
+    chat_model = settings.judge_model if not spec.is_decision_model(settings.judge_model) \
+        else spec.data["recommended"]["default_model"]
     for mode in ("agent", "mapped"):
-        payload = opik.rule_payload(spec, replace(settings, judge_mode=mode), PROJECT_PLACEHOLDER)
+        payload = opik.rule_payload(spec, replace(settings, judge_mode=mode, judge_model=chat_model), PROJECT_PLACEHOLDER)
         out[f"opik-rule.{mode}.json"] = json.dumps(payload, indent=2) + "\n"
+    decision = replace(settings, judge_model=spec.decision["default_model"])
+    out["opik-rule.decision.json"] = json.dumps(opik.rule_payload(spec, decision, PROJECT_PLACEHOLDER), indent=2) + "\n"
     return out
+
+
+def _decision(spec: Spec, settings: Settings) -> dict[str, str]:
+    # OpenRouter Decisions / TypeSafe System One request: fill the {{...}} placeholders in `state` per trace.
+    body = {
+        "model": spec.decision["default_model"],
+        "state": spec.decision_state(settings.agent_profile_file),
+        "questions": {q["name"]: {"type": "noul", "instructions": " ".join(q["question"].split())}
+                      for q in spec.decision["questions"]},
+        "_endpoint": "POST https://openrouter.ai/api/alpha/decisions",
+        "_template_variables": spec.decision["variables"],
+        "_taxonomy_by_question": {q["name"]: q["maps"] for q in spec.decision["questions"] if "maps" in q},
+    }
+    return {"decision-request.json": json.dumps(body, indent=2) + "\n"}
 
 
 def _langfuse(spec: Spec, settings: Settings) -> dict[str, str]:
@@ -65,7 +83,7 @@ def _openai(spec: Spec, settings: Settings) -> dict[str, str]:
     return {"openai-chat-request.json": json.dumps(body, indent=2) + "\n"}
 
 
-TARGETS = {"opik": _opik_rules, "langfuse": _langfuse, "phoenix": _phoenix, "openai": _openai}
+TARGETS = {"opik": _opik_rules, "decision": _decision, "langfuse": _langfuse, "phoenix": _phoenix, "openai": _openai}
 
 
 def export(spec: Spec, settings: Settings, targets: list[str], out_dir: Path = DIST_DIR) -> list[Path]:

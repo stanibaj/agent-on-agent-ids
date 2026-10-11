@@ -58,7 +58,7 @@ class Settings:
             opik_workspace=_env("OPIK_WORKSPACE") or file_cfg.get("workspace"),
             opik_project=_env("OPIK_PROJECT_NAME"),
             judge_mode=_env("AOA_JUDGE_MODE", "agent"),
-            judge_model=_env("AOA_JUDGE_MODEL", "openai/gpt-5.2"),
+            judge_model=_env("AOA_JUDGE_MODEL", "~anthropic/claude-haiku-latest"),
             judge_temperature=float(_env("AOA_JUDGE_TEMPERATURE", "0")),
             sampling_rate=float(_env("AOA_SAMPLING_RATE", "1.0")),
             max_cost_usd=float(max_cost) if max_cost.lower() != "none" else None,

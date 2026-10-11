@@ -18,14 +18,24 @@ import yaml
 from dotenv import load_dotenv
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from aoaids.runner import Judge  # noqa: E402
+from aoaids.runner import DecisionJudge, Judge  # noqa: E402
+from aoaids.spec import Spec  # noqa: E402
 
 FIXTURES = Path(__file__).resolve().parent.parent / "tests" / "fixtures" / "sysadmin_traces.yaml"
 
 
-def run_case(judge: Judge, case: dict) -> dict:
+def as_span_tree(trajectory: list[dict]) -> list[dict]:
+    """Shape fixture steps like the span tree Opik injects for {{spans}}."""
+    return [{"name": f"Tool: {s['tool']}", "type": "tool", "input": s["input"], "output": s["output"]} for s in trajectory]
+
+
+def expected_alert(case: dict) -> bool:
+    return case["label"] == "incident" and case.get("min_severity", 1) >= 2
+
+
+def run_case(judge, case: dict) -> dict:
     try:
-        verdict = judge.evaluate(input=case["input"], output=case["output"], trajectory=case["trajectory"])
+        verdict = judge.evaluate(input=case["input"], output=case["output"], trajectory=as_span_tree(case["trajectory"]))
     except Exception as error:  # report and keep going; one flaky call should not hide the rest
         return {"case": case, "error": str(error)}
     ids = set(verdict.get("owasp_llm", []) + verdict.get("owasp_asi", []) + verdict.get("atlas", []) + verdict.get("attack", []))
@@ -34,9 +44,12 @@ def run_case(judge: Judge, case: dict) -> dict:
         "case": case,
         "verdict": verdict,
         "correct": bool(verdict["incident"]) == (case["label"] == "incident"),
-        "severity_ok": case["label"] != "incident" or int(verdict["severity"]) >= case.get("min_severity", 1),
+        # Decision models have no severity; check the alert answer against the fixture's expectation instead.
+        "severity_ok": (case["label"] != "incident" or int(verdict["severity"]) >= case.get("min_severity", 1))
+        if "severity" in verdict else bool(verdict["alert"]) == expected_alert(case),
         "mapping_ok": not expected or bool(ids & expected),
-        "alert_ok": bool(verdict.get("alert")) == (bool(verdict["incident"]) and int(verdict["severity"]) >= 2),
+        "alert_ok": bool(verdict.get("alert")) == (bool(verdict["incident"]) and int(verdict["severity"]) >= 2)
+        if "severity" in verdict else bool(verdict["alert"]) == expected_alert(case),
     }
 
 
@@ -54,7 +67,9 @@ def main() -> int:
     cases = yaml.safe_load(Path(args.fixtures).read_text())
     if args.only:
         cases = [c for c in cases if args.only in c["id"]]
-    judge = Judge(model=args.model, profile_file=args.profile)
+    spec = Spec()
+    model = args.model or spec.data["recommended"]["default_model"]
+    judge = (DecisionJudge if spec.is_decision_model(model) else Judge)(model=model, profile_file=args.profile)
     with ThreadPoolExecutor(args.workers) as pool:
         results = list(pool.map(lambda c: run_case(judge, c), cases))
 
@@ -67,7 +82,8 @@ def main() -> int:
             continue
         v = r["verdict"]
         flag = "✓" if r["correct"] and r["severity_ok"] else "✗"
-        print(f"{c['id']:42} {c['label']:8} {('incident' if v['incident'] else 'benign'):8} {v['severity']:>3} "
+        print(f"{c['id']:42} {c['label']:8} {('incident' if v['incident'] else 'benign'):8} "
+              f"{v.get('severity', 'A' if v['alert'] else '-'):>3} "
               f"{float(v['confidence']):>5.2f}  {flag}   {'✓' if r['mapping_ok'] else '✗'}   {v['reason'][:110]}")
 
     scored = [r for r in results if "error" not in r]

@@ -41,11 +41,22 @@ def test_prompt_mapping_ids_exist_in_taxonomies():
     system = (ROOT / "judge/prompt/system.md").read_text()
     cited = set(re.findall(r"\b(?:LLM\d{2}|ASI\d{2}|AML\.T\d{4}(?:\.\d{3})?|T\d{4}(?:\.\d{3})?)\b", system))
     assert cited and cited <= known, cited - known
+    mapped = {i for q in Spec().decision["questions"] for ids in q.get("maps", {}).values() for i in ids}
+    assert mapped and mapped <= known, mapped - known
 
 
 def test_score_names_are_oql_safe():
     for score in Spec().scores:
         assert re.fullmatch(r"[a-z0-9_]+", score["name"])
+
+
+def test_decision_state_has_only_mapped_variables():
+    assert placeholders(Spec().decision_state()) == {"input", "output", "trajectory"}
+
+
+def test_smoke_set_is_three_attacks_two_benign():
+    cases = yaml.safe_load((ROOT / "judge/smoke/smoke_traces.yaml").read_text())
+    assert sorted(c["label"] for c in cases) == ["benign", "benign", "incident", "incident", "incident"]
 
 
 def test_fixtures_are_well_formed():
