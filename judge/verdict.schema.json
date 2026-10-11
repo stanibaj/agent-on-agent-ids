@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/stanibaj/agent-on-agent-ids/judge/verdict.schema.json",
+  "title": "AOA-IDS verdict",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["incident", "alert", "severity", "confidence", "stage", "category", "owasp_llm", "owasp_asi", "atlas", "attack", "evidence", "reason", "summary"],
+  "properties": {
+    "incident": {"type": "boolean", "description": "Attack attempt with quotable adversarial content."},
+    "alert": {"type": "boolean", "description": "incident is true and severity >= 2: the paging signal."},
+    "severity": {"type": "integer", "minimum": 0, "maximum": 4},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "stage": {"type": "string", "enum": ["none", "attempted", "succeeded"]},
+    "category": {"type": "string", "description": "Short slug, e.g. indirect_prompt_injection, persistence, exfiltration, benign."},
+    "owasp_llm": {"type": "array", "items": {"type": "string", "pattern": "^LLM(0[1-9]|10)$"}},
+    "owasp_asi": {"type": "array", "items": {"type": "string", "pattern": "^ASI(0[1-9]|10)$"}},
+    "atlas": {"type": "array", "items": {"type": "string", "pattern": "^AML\\.T\\d{4}(\\.\\d{3})?$"}},
+    "attack": {"type": "array", "items": {"type": "string", "pattern": "^T\\d{4}(\\.\\d{3})?$"}},
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["where", "quote"],
+        "properties": {"where": {"type": "string"}, "quote": {"type": "string", "maxLength": 400}}
+      }
+    },
+    "reason": {"type": "string", "description": "Single line in the AOA-IDS reason format."},
+    "summary": {"type": "string"}
+  }
+}

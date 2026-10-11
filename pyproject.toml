@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-on-agent-ids"
+version = "0.1.0"
+description = "Agent-on-agent intrusion detection: an LLM judge that watches AI agent traces for attacks and maps them to OWASP LLM/Agentic Top 10, MITRE ATLAS and ATT&CK."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = ["httpx>=0.27", "pyyaml>=6", "python-dotenv>=1"]
+keywords = ["ai-security", "llm-as-a-judge", "agent-security", "prompt-injection", "opik", "langfuse", "phoenix", "mitre-atlas", "owasp"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "opik>=1.8"]
+
+[project.scripts]
+aoa-ids = "aoaids.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/stanibaj/agent-on-agent-ids"
+
+[tool.setuptools]
+packages = ["aoaids", "aoaids.adapters"]

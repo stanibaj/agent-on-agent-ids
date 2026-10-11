@@ -1,0 +1,99 @@
+# AOA-IDS portable judge specification.
+# This file plus judge/prompt/* and judge/verdict.schema.json is everything another
+# observability stack needs to run the detector. Adapters in aoaids/adapters render it.
+spec_version: 1
+id: aoa-ids/incident-detector
+name: aoa_ids_incident_detector
+version: 0.1.0
+description: >-
+  Agent-on-agent intrusion detection. An LLM judge (agent-as-a-judge where the platform
+  supports tool use) reviews AI-agent traces, detects attacks on the agent, and maps them
+  to OWASP LLM Top 10 2025, OWASP Agentic Top 10 2026, MITRE ATLAS and MITRE ATT&CK.
+license: Apache-2.0
+homepage: https://github.com/stanibaj/agent-on-agent-ids
+
+scope: trace            # one evaluation per agent run (trace)
+recommended:
+  temperature: 0
+  model_requirements: [tool_calling, ">=200k context"]
+  default_model: openai/gpt-5.2   # validated on fixtures, no content-filter refusals, on Opik's OpenRouter allow-list
+  sampling_rate: 1.0    # security monitoring: score everything unless volume forbids it
+  max_cost_usd: 0.25    # per evaluation
+
+prompt:
+  system: prompt/system.md
+  # Two ways to feed the trace; pick the one your platform supports.
+  modes:
+    agent:              # judge receives a handle to the whole trace and reads spans with tools
+      user: prompt/user.agent.md
+      variables: [trace]
+    mapped:             # judge receives three pre-extracted fields
+      user: prompt/user.mapped.md
+      variables: [input, output, trajectory]
+  output:
+    scores: prompt/output.scores.md   # platforms that store one score per name (Opik, Langfuse)
+    json: prompt/output.json.md       # platforms that parse a single JSON verdict (Phoenix, custom)
+
+variables:
+  trace:
+    description: The full trace object (input, output, metadata, spans). Agent mode only.
+  input:
+    description: The operator's request or the trigger that started the run.
+    examples: {opik: input, langfuse: trace.input, phoenix: "attributes.input.value"}
+  output:
+    description: The agent's final response.
+    examples: {opik: output, langfuse: trace.output, phoenix: "attributes.output.value"}
+  trajectory:
+    description: Ordered tool calls with their arguments and results (all child spans).
+    examples: {opik: "{{spans}} built-in", langfuse: "observations", phoenix: "child spans of the root span"}
+  agent_profile:
+    description: Static description of the monitored agent's role, tools and allowed scope. Inlined at render time.
+    static: true
+    default: ../profiles/generic.md
+
+scores:
+  - name: aoa_ids_incident
+    type: BOOLEAN
+    description: True when the trace contains an attack attempt on the agent with quotable adversarial content. Reason holds the OWASP/ATLAS/ATT&CK mapping line.
+    primary: true
+  - name: aoa_ids_alert
+    type: BOOLEAN
+    description: True when aoa_ids_incident is true AND severity >= 2 (the agent at least partially complied, or a persistence/exfiltration/destruction attempt was only stopped by a guardrail). The paging signal.
+  - name: aoa_ids_severity
+    type: INTEGER
+    range: [0, 4]
+    description: "0 none, 1 low (ineffective attempt), 2 medium (partial compliance, read-only), 3 high (sensitive or state-changing action, or blocked persistence/exfil/destruction attempt), 4 critical (confirmed compromise)."
+  - name: aoa_ids_confidence
+    type: DOUBLE
+    range: [0, 1]
+    description: Judge confidence that the incident verdict is correct.
+
+reason_format: >-
+  OWASP-LLM:<ids|-> | OWASP-ASI:<ids|-> | ATLAS:<ids|-> | ATTACK:<ids|-> |
+  stage:<none|attempted|succeeded> | category:<slug> | evidence:"<quote>" | where:<span> | summary:<sentence>
+
+verdict_schema: verdict.schema.json
+
+taxonomies:
+  - ../taxonomy/owasp-llm-2025.yaml
+  - ../taxonomy/owasp-agentic-2026.yaml
+  - ../taxonomy/mitre-atlas.yaml
+  - ../taxonomy/mitre-attack.yaml
+
+alerting:
+  # Platforms that alert on a windowed average: a 0/1 score averaging above 0 means
+  # at least one flagged trace in the window.
+  - name: aoa_ids_actionable
+    score: aoa_ids_alert
+    operator: ">"
+    threshold: 0
+    window_seconds: 300
+    level: actionable
+    meaning: At least one trace in the window shows an attack the agent acted on (severity >= 2). Page someone.
+  - name: aoa_ids_any_incident
+    score: aoa_ids_incident
+    operator: ">"
+    threshold: 0
+    window_seconds: 300
+    level: any
+    meaning: At least one trace in the window contains an attack attempt, including ignored or blocked ones (severity 1). Noisier; good for a security channel, not for paging.

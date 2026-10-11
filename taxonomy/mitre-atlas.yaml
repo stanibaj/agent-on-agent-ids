@@ -1,0 +1,34 @@
+framework: MITRE ATLAS
+version: "2026.09"
+source: https://atlas.mitre.org/techniques/
+prefix: ATLAS
+# Subset relevant to attacks on tool-using agents. IDs and names taken from
+# mitre-atlas/atlas-data dist/v6/ATLAS-2026.09.yaml.
+items:
+  - {id: AML.T0051.000, name: "LLM Prompt Injection: Direct"}
+  - {id: AML.T0051.001, name: "LLM Prompt Injection: Indirect"}
+  - {id: AML.T0051.002, name: "LLM Prompt Injection: Triggered"}
+  - {id: AML.T0054, name: LLM Jailbreak}
+  - {id: AML.T0068, name: LLM Prompt Obfuscation}
+  - {id: AML.T0094, name: Delay Execution of LLM Instructions}
+  - {id: AML.T0053, name: AI Agent Tool Invocation}
+  - {id: AML.T0102, name: Generate Malicious Commands}
+  - {id: AML.T0050, name: Command and Scripting Interpreter}
+  - {id: AML.T0056, name: Extract LLM System Prompt}
+  - {id: AML.T0057, name: LLM Data Leakage}
+  - {id: AML.T0055, name: Unsecured Credentials}
+  - {id: AML.T0083, name: Credentials from AI Agent Configuration}
+  - {id: AML.T0098, name: AI Agent Tool Credential Harvesting}
+  - {id: AML.T0086, name: Exfiltration via AI Agent Tool Invocation}
+  - {id: AML.T0025, name: Exfiltration via Cyber Means}
+  - {id: AML.T0080.000, name: "AI Agent Context Poisoning: Memory"}
+  - {id: AML.T0080.001, name: "AI Agent Context Poisoning: Thread"}
+  - {id: AML.T0081, name: Modify AI Agent Configuration}
+  - {id: AML.T0099, name: AI Agent Tool Data Poisoning}
+  - {id: AML.T0110, name: AI Agent Tool Poisoning}
+  - {id: AML.T0010.005, name: "AI Supply Chain Compromise: AI Agent Tool"}
+  - {id: AML.T0101, name: Data Destruction via AI Agent Tool Invocation}
+  - {id: AML.T0092, name: Manipulate User LLM Chat History}
+  - {id: AML.T0034.002, name: "Cost Harvesting: Agentic Resource Consumption"}
+  - {id: AML.T0061, name: LLM Prompt Self-Replication}
+  - {id: AML.T0105, name: Escape to Host}
