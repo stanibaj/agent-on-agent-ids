@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>agent-on-agent-ids — README promo</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #0a0f0d;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #0a0f0d;
+        font-family: "JetBrains Mono", monospace;
+        color: #e7eee9;
+      }
+</style>
+  </head>
+  <body>
+    <div data-hf-id="hf-0xju" id="root" data-composition-id="main" data-start="0" data-duration="31" data-width="1920" data-height="1080">
+      <div data-hf-id="hf-a4h8" id="bg" data-composition-id="bg" data-composition-src="compositions/bg.html" data-start="0" data-duration="31" data-track-index="0" data-width="1920" data-height="1080"></div>
+
+      <div data-hf-id="hf-m9b6" id="s1-hook" data-composition-id="s1-hook" data-composition-src="compositions/s1-hook.html" data-start="0" data-duration="4" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-ccgj" id="s2-attack" data-composition-id="s2-attack" data-composition-src="compositions/s2-attack.html" data-start="4" data-duration="6.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-y9bz" id="s3-detect" data-composition-id="s3-detect" data-composition-src="compositions/s3-detect.html" data-start="10.5" data-duration="7" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-sah7" id="s4-alert" data-composition-id="s4-alert" data-composition-src="compositions/s4-alert.html" data-start="17.5" data-duration="3.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-j9rr" id="s5-proof" data-composition-id="s5-proof" data-composition-src="compositions/s5-proof.html" data-start="21" data-duration="4.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div data-hf-id="hf-8ska" id="s6-cta" data-composition-id="s6-cta" data-composition-src="compositions/s6-cta.html" data-start="25.5" data-duration="5.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+
+      <div data-hf-id="hf-wt56" id="hud-layer" data-composition-id="hud-layer" data-composition-src="compositions/hud-layer.html" data-start="0" data-duration="31" data-track-index="2" data-width="1920" data-height="1080"></div>
+    </div>
+    <script>
+      // All motion lives in the scene, background and HUD sub-compositions.
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

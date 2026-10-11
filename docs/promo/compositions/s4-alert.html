@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #s4-alert {
+          position: absolute;
+          inset: 0;
+          font-family: "JetBrains Mono", monospace;
+          color: #e7eee9;
+        }
+        #s4-left {
+          position: absolute;
+          left: 110px;
+          top: 250px;
+          width: 700px;
+        }
+        .s4-line {
+          display: block;
+          font-family: "Archivo Black", sans-serif;
+          font-size: 100px;
+          line-height: 0.98;
+          white-space: nowrap;
+          letter-spacing: -0.035em;
+          text-transform: uppercase;
+        }
+        #s4-l2 {
+          color: #ffb21e;
+        }
+        #s4-sub {
+          margin-top: 40px;
+          font-size: 34px;
+          line-height: 1.45;
+          color: #93a79d;
+        }
+        #s4-sub b {
+          color: #e7eee9;
+          font-weight: 700;
+        }
+        #s4-stack {
+          position: absolute;
+          left: 900px;
+          top: 230px;
+          width: 910px;
+          height: 600px;
+        }
+        .s4-card {
+          position: absolute;
+          left: 0;
+          right: 0;
+          background: #16211c;
+          border: 3px solid #26362f;
+          border-radius: 16px;
+          padding: 34px 40px;
+        }
+        #s4-ghost {
+          top: 0;
+          height: 230px;
+          opacity: 0.5;
+          transform-origin: 50% 0;
+        }
+        #s4-ghost .s4-meta {
+          color: #5f7369;
+        }
+        #s4-card {
+          top: 60px;
+          border-color: #ffb21e;
+        }
+        .s4-meta {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 26px;
+          color: #93a79d;
+        }
+        .s4-meta span:first-child {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+        }
+        .s4-sq {
+          display: block;
+          width: 22px;
+          height: 22px;
+          border-radius: 5px;
+          background: #ff5b47;
+        }
+        #s4-name {
+          margin-top: 22px;
+          font-size: 46px;
+          font-weight: 700;
+          color: #ffb21e;
+        }
+        .s4-body {
+          margin-top: 16px;
+          font-size: 30px;
+          line-height: 1.5;
+          color: #e7eee9;
+        }
+        .s4-body span {
+          color: #93a79d;
+        }
+        #s4-dest {
+          position: absolute;
+          left: 0;
+          top: 470px;
+          display: flex;
+          align-items: center;
+          gap: 18px;
+          font-size: 30px;
+          color: #93a79d;
+        }
+        .s4-pill {
+          display: block;
+          padding: 12px 24px;
+          border: 3px solid #ffb21e;
+          border-radius: 999px;
+          font-weight: 700;
+          color: #e7eee9;
+        }
+      </style>
+
+      <div data-hf-id="hf-wkm7" id="s4-alert" data-composition-id="s4-alert" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-pvc2" id="s4-left">
+          <div data-hf-id="hf-wwkr" class="s4-line" id="s4-l1">Then it</div>
+          <div data-hf-id="hf-jy09" class="s4-line" id="s4-l2">pages you.</div>
+          <div data-hf-id="hf-9iz7" id="s4-sub">Native <b data-hf-id="hf-2hb2">Comet Opik</b> alert. Fires only when the agent <b data-hf-id="hf-ys4q">acted</b> on the attack.</div>
+        </div>
+
+        <div data-hf-id="hf-5wuz" id="s4-stack">
+          <div data-hf-id="hf-teap" class="s4-card" id="s4-ghost">
+            <div data-hf-id="hf-12vf" class="s4-meta" data-layout-allow-occlusion=""><span data-hf-id="hf-kf8d" data-layout-allow-occlusion="">aoa_ids_incident · blocked attempt</span><span data-hf-id="hf-m8cy" data-layout-allow-occlusion="">12 min ago</span></div>
+          </div>
+          <div data-hf-id="hf-1zwu" class="s4-card" id="s4-card">
+            <div data-hf-id="hf-dlop" class="s4-meta">
+              <span data-hf-id="hf-7fr1"><div data-hf-id="hf-tf4u" class="s4-sq"></div>Comet Opik · Alert</span><span data-hf-id="hf-9yvn">now</span>
+            </div>
+            <div data-hf-id="hf-xyyh" id="s4-name">aoa_ids_actionable fired</div>
+            <div data-hf-id="hf-sng4" class="s4-body">Hermes Sysadmin <span data-hf-id="hf-lwjb">· 1 actionable attack</span></div>
+            <div data-hf-id="hf-izyx" class="s4-body">severity 4 <span data-hf-id="hf-1bmq">·</span> T1098.004 <span data-hf-id="hf-zymt">· last 5 min</span></div>
+          </div>
+          <div data-hf-id="hf-wvht" id="s4-dest">
+            <span data-hf-id="hf-p70p">→</span>
+            <div data-hf-id="hf-c3a5" class="s4-pill" id="s4-p1">Webhook</div>
+            <div data-hf-id="hf-42k9" class="s4-pill" id="s4-p2">Slack</div>
+            <div data-hf-id="hf-qwr5" class="s4-pill" id="s4-p3">PagerDuty</div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+
+          tl.fromTo("#s4-l1", { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.05);
+          tl.fromTo("#s4-l2", { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.25);
+          tl.fromTo("#s4-ghost", { opacity: 0, y: 30 }, { opacity: 0.5, y: 0, duration: 0.4, ease: "power2.out" }, 0.2);
+          // The alert card slides in from the right and settles on top of the stack.
+          tl.fromTo("#s4-card", { opacity: 0, x: 220 }, { opacity: 1, x: 0, duration: 0.55, ease: "power4.out" }, 0.5);
+          tl.fromTo("#s4-ghost", { scale: 1 }, { scale: 0.94, duration: 0.5, ease: "power2.out", immediateRender: false }, 0.6);
+          tl.fromTo("#s4-sub", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power1.out" }, 0.9);
+          ["#s4-p1", "#s4-p2", "#s4-p3"].forEach((sel, i) => {
+            tl.fromTo(sel, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" }, 1.35 + i * 0.16);
+          });
+          tl.fromTo("#s4-dest", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 1.3);
+
+          tl.to(["#s4-left", "#s4-stack"], { opacity: 0, duration: 0.3, ease: "power2.in" }, 3.2);
+
+          window.__timelines["s4-alert"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

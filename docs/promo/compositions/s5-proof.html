@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #s5-proof {
+          position: absolute;
+          inset: 0;
+          font-family: "JetBrains Mono", monospace;
+          color: #e7eee9;
+        }
+        #s5-kicker {
+          position: absolute;
+          left: 110px;
+          top: 130px;
+          font-size: 32px;
+          color: #ffb21e;
+        }
+        #s5-stats {
+          position: absolute;
+          left: 110px;
+          right: 110px;
+          top: 200px;
+          display: grid;
+          grid-template-columns: 1fr 1fr 1.25fr;
+        }
+        .s5-stat {
+          position: relative;
+          padding: 10px 40px 0 0;
+        }
+        .s5-stat + .s5-stat {
+          padding-left: 50px;
+        }
+        .s5-rule {
+          position: absolute;
+          left: 0;
+          top: 14px;
+          width: 3px;
+          height: 220px;
+          background: #26362f;
+          transform-origin: 50% 0;
+        }
+        .s5-num {
+          display: block;
+          font-family: "Archivo Black", sans-serif;
+          font-size: 124px;
+          line-height: 1;
+          letter-spacing: -0.04em;
+          white-space: nowrap;
+        }
+        #s5-n1 {
+          color: #ffb21e;
+        }
+        #s5-n3 {
+          color: #ffb21e;
+        }
+        .s5-lab {
+          margin-top: 18px;
+          font-size: 32px;
+          line-height: 1.35;
+          color: #93a79d;
+        }
+        .s5-lab b {
+          color: #e7eee9;
+          font-weight: 700;
+        }
+        .s5-railrow {
+          position: absolute;
+          left: 110px;
+          right: 110px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        #s5-rail1 {
+          top: 560px;
+        }
+        #s5-rail2 {
+          top: 690px;
+        }
+        .s5-rail-k {
+          width: 210px;
+          flex: none;
+          font-size: 28px;
+          letter-spacing: 0.08em;
+          color: #93a79d;
+        }
+        .s5-pill {
+          display: block;
+          padding: 12px 18px;
+          border: 3px solid #26362f;
+          border-radius: 12px;
+          font-size: 28px;
+          font-weight: 700;
+          color: #e7eee9;
+          white-space: nowrap;
+        }
+        .s5-pill.hot {
+          border-color: #ffb21e;
+          color: #ffb21e;
+        }
+        .s5-pill i {
+          font-style: normal;
+          font-weight: 400;
+          color: #93a79d;
+          margin-left: 8px;
+        }
+        #s5-foot {
+          position: absolute;
+          left: 110px;
+          top: 840px;
+          font-size: 26px;
+          color: #5f7369;
+        }
+      </style>
+
+      <div data-hf-id="hf-ozah" id="s5-proof" data-composition-id="s5-proof" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-a5s9" id="s5-kicker">// measured, not promised</div>
+        <div data-hf-id="hf-s8wz" id="s5-stats">
+          <div data-hf-id="hf-g2le" class="s5-stat" id="s5-s1">
+            <div data-hf-id="hf-2w9f" class="s5-num"><span data-hf-id="hf-jhw8" id="s5-n1">0</span><span data-hf-id="hf-m214">/20</span></div>
+            <div data-hf-id="hf-ak1i" class="s5-lab"><b data-hf-id="hf-6euy">attacks caught</b><div data-hf-id="hf-75yu">15 attack categories</div></div>
+          </div>
+          <div data-hf-id="hf-c4hd" class="s5-stat" id="s5-s2">
+            <div data-hf-id="hf-kh09" class="s5-rule" id="s5-rule1"></div>
+            <div data-hf-id="hf-b3g3" class="s5-num"><span data-hf-id="hf-tnl5" id="s5-n2">0</span><span data-hf-id="hf-m7lv">/10</span></div>
+            <div data-hf-id="hf-tkyi" class="s5-lab"><b data-hf-id="hf-uhqq">false alarms</b><div data-hf-id="hf-rcja">on hard benign cases</div></div>
+          </div>
+          <div data-hf-id="hf-bctk" class="s5-stat" id="s5-s3">
+            <div data-hf-id="hf-of4a" class="s5-rule" id="s5-rule2"></div>
+            <div data-hf-id="hf-b3hz" class="s5-num" id="s5-n3">$0.002</div>
+            <div data-hf-id="hf-tz9j" class="s5-lab"><b data-hf-id="hf-wsls">for all 30 traces</b><div data-hf-id="hf-3bg0">with TypeSafe Jev</div></div>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-fa3z" class="s5-railrow" id="s5-rail1">
+          <div data-hf-id="hf-sjk9" class="s5-rail-k">JUDGES</div>
+          <div data-hf-id="hf-0edq" class="s5-pill hot" id="s5-a1">TypeSafe Jev</div>
+          <div data-hf-id="hf-ctci" class="s5-pill" id="s5-a2">Claude Haiku<i data-hf-id="hf-snfb">latest</i></div>
+          <div data-hf-id="hf-ieq2" class="s5-pill" id="s5-a3">Gemini Flash<i data-hf-id="hf-u107">latest</i></div>
+          <div data-hf-id="hf-1ee4" class="s5-pill" id="s5-a4">GPT mini<i data-hf-id="hf-tmp6">latest</i></div>
+        </div>
+        <div data-hf-id="hf-6m84" class="s5-railrow" id="s5-rail2">
+          <div data-hf-id="hf-ppmf" class="s5-rail-k">PLATFORMS</div>
+          <div data-hf-id="hf-7a78" class="s5-pill hot" id="s5-b1">Comet Opik<i data-hf-id="hf-9d8c">installer</i></div>
+          <div data-hf-id="hf-9siy" class="s5-pill" id="s5-b2">Langfuse<i data-hf-id="hf-o9je">export</i></div>
+          <div data-hf-id="hf-17ol" class="s5-pill" id="s5-b3">Phoenix<i data-hf-id="hf-4pou">export</i></div>
+          <div data-hf-id="hf-51yw" class="s5-pill" id="s5-b4">OpenAI-compatible<i data-hf-id="hf-53zv">export</i></div>
+        </div>
+        <div data-hf-id="hf-4bc3" id="s5-foot">results on the repo's 30 bundled test traces · verify with scripts/validate_judge.py</div>
+      </div>
+
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          const n1 = document.getElementById("s5-n1");
+
+          tl.fromTo("#s5-kicker", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 0.05);
+          tl.fromTo("#s5-s1", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.15);
+          tl.fromTo("#s5-s2", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.35);
+          tl.fromTo("#s5-s3", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.55);
+          tl.fromTo(["#s5-rule1", "#s5-rule2"], { scaleY: 0 }, { scaleY: 1, duration: 0.6, ease: "power3.inOut", stagger: 0.15 }, 0.3);
+
+          // Count-up 0 → 20 (seek-safe: value derived from tween progress).
+          const c = { v: 0 };
+          tl.fromTo(
+            c,
+            { v: 0 },
+            {
+              v: 20,
+              duration: 1.0,
+              ease: "power2.out",
+              onUpdate: () => {
+                n1.textContent = String(Math.round(c.v));
+              },
+            },
+            0.25,
+          );
+
+          ["#s5-a1", "#s5-a2", "#s5-a3", "#s5-a4"].forEach((sel, i) => {
+            tl.fromTo(sel, { opacity: 0, scale: 0.75 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" }, 1.4 + i * 0.12);
+          });
+          ["#s5-b1", "#s5-b2", "#s5-b3", "#s5-b4"].forEach((sel, i) => {
+            tl.fromTo(sel, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" }, 2.0 + i * 0.12);
+          });
+          tl.fromTo([".s5-rail-k"], { opacity: 0 }, { opacity: 1, duration: 0.3, stagger: 0.6 }, 1.3);
+          tl.fromTo("#s5-foot", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 2.6);
+
+          tl.to(["#s5-kicker", "#s5-stats", ".s5-railrow", "#s5-foot"], { opacity: 0, duration: 0.3, ease: "power2.in" }, 4.2);
+
+          window.__timelines["s5-proof"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

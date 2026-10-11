@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #hud-layer {
+          position: absolute;
+          inset: 0;
+          font-family: "JetBrains Mono", monospace;
+          color: #e7eee9;
+        }
+      /* HUD: persistent foreground metadata */
+      #hud {
+        position: absolute;
+        left: 110px;
+        right: 110px;
+        top: 44px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 24px;
+        letter-spacing: 0.04em;
+      }
+      #hud-left b {
+        color: #ffb21e;
+        font-weight: 700;
+      }
+      #hud-left span {
+        color: #93a79d;
+      }
+      #hud-right {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: #93a79d;
+      }
+      #hud-dot {
+        display: block;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #ffb21e;
+      }
+      #hud-foot {
+        position: absolute;
+        left: 110px;
+        right: 110px;
+        bottom: 22px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 24px;
+        color: #5f7369;
+        letter-spacing: 0.04em;
+      }
+          </style>
+      <div data-hf-id="hf-9pp3" id="hud-layer" data-composition-id="hud-layer" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-i9xo" id="hud">
+          <div data-hf-id="hf-qkb2" id="hud-left"><b data-hf-id="hf-x5ir">AOA-IDS</b> <span data-hf-id="hf-hkpq">// agent-on-agent intrusion detection</span></div>
+          <div data-hf-id="hf-w3ut" id="hud-right"><div data-hf-id="hf-clhe" id="hud-dot"></div><span data-hf-id="hf-1eiy" id="hud-status">watching agent traces</span></div>
+        </div>
+        <div data-hf-id="hf-6tqp" id="hud-foot">
+          <span data-hf-id="hf-ig5w">OWASP LLM · OWASP Agentic · MITRE ATLAS · MITRE ATT&amp;CK</span>
+          <span data-hf-id="hf-13mt">github.com/stanibaj/agent-on-agent-ids</span>
+        </div>
+      </div>
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          // Status dot: finite pulse, the watcher is alive.
+          tl.fromTo("#hud-dot", { opacity: 1 }, { opacity: 0.25, duration: 0.5, ease: "sine.inOut", yoyo: true, repeat: 29 }, 0);
+          tl.fromTo("#hud", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.1);
+          tl.fromTo("#hud-foot", { opacity: 0 }, { opacity: 1, duration: 0.6, ease: "power2.out" }, 0.3);
+          // Step aside for the final lockup, which carries the URL itself.
+          tl.to("#hud-foot", { opacity: 0, duration: 0.4, ease: "power2.in" }, 29.2);
+          window.__timelines["hud-layer"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #s6-cta {
+          position: absolute;
+          inset: 0;
+          font-family: "JetBrains Mono", monospace;
+          color: #e7eee9;
+        }
+        #s6-term {
+          position: absolute;
+          left: 260px;
+          top: 150px;
+          width: 1400px;
+          height: 640px;
+          background: #111a16;
+          border: 3px solid #26362f;
+          border-radius: 16px;
+          overflow: hidden;
+          transform-origin: 50% 0;
+        }
+        #s6-term-head {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          height: 70px;
+          padding: 0 32px;
+          background: #16211c;
+          border-bottom: 3px solid #26362f;
+          font-size: 26px;
+          color: #93a79d;
+        }
+        .s6-dot {
+          display: block;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #26362f;
+        }
+        #s6-term-head span {
+          margin-left: 14px;
+        }
+        #s6-term-body {
+          padding: 34px 40px;
+          font-size: 32px;
+          line-height: 1.55;
+        }
+        #s6-prompt {
+          font-size: 40px;
+          font-weight: 700;
+          white-space: nowrap;
+          margin-bottom: 16px;
+        }
+        #s6-prompt .ps {
+          color: #ffb21e;
+        }
+        #s6-caret {
+          display: inline-block;
+          width: 22px;
+          height: 44px;
+          margin-left: 4px;
+          vertical-align: -8px;
+          background: #ffb21e;
+        }
+        .s6-out {
+          display: block;
+          white-space: pre;
+          color: #93a79d;
+        }
+        .s6-out .ok {
+          color: #71d6a0;
+          font-weight: 700;
+        }
+        .s6-out .atk {
+          color: #ff8a7a;
+        }
+        #s6-pass {
+          display: inline-block;
+          margin-top: 18px;
+          padding: 8px 20px;
+          border-radius: 10px;
+          background: #ffb21e;
+          color: #0a0f0d;
+          font-weight: 700;
+          font-size: 34px;
+        }
+        /* Final lockup */
+        #s6-lock {
+          position: absolute;
+          left: 110px;
+          right: 110px;
+          top: 345px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        #s6-word {
+          display: block;
+          font-family: "Archivo Black", sans-serif;
+          font-size: 128px;
+          line-height: 1;
+          letter-spacing: -0.04em;
+          white-space: nowrap;
+        }
+        #s6-word span {
+          color: #ffb21e;
+        }
+        #s6-tag {
+          margin-top: 34px;
+          font-size: 40px;
+          color: #93a79d;
+        }
+        #s6-tag b {
+          color: #e7eee9;
+          font-weight: 700;
+        }
+        #s6-url {
+          display: block;
+          margin-top: 56px;
+          padding: 18px 36px;
+          border: 4px solid #ffb21e;
+          border-radius: 999px;
+          font-size: 40px;
+          font-weight: 700;
+          color: #ffb21e;
+        }
+      </style>
+
+      <div data-hf-id="hf-pt8v" id="s6-cta" data-composition-id="s6-cta" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-34ll" id="s6-term">
+          <div data-hf-id="hf-mplw" id="s6-term-head">
+            <div data-hf-id="hf-oro5" class="s6-dot"></div>
+            <div data-hf-id="hf-v1op" class="s6-dot"></div>
+            <div data-hf-id="hf-w8ls" class="s6-dot"></div>
+            <span data-hf-id="hf-x2fs">~/agent-on-agent-ids</span>
+          </div>
+          <div data-hf-id="hf-8coi" id="s6-term-body">
+            <div data-hf-id="hf-f6vh" id="s6-prompt"><span data-hf-id="hf-kwz2" class="ps">$ </span><span data-hf-id="hf-ws7m" id="s6-typed"></span><span data-hf-id="hf-t4x7" id="s6-caret"></span></div>
+            <div data-hf-id="hf-f9a3" class="s6-out" id="s6-o0">rule aoa_ids_incident_detector created · smoke test…</div>
+            <div data-hf-id="hf-juei" class="s6-out" id="s6-o1"><span data-hf-id="hf-nd5k" class="ok">✓</span>  smoke-service-restart              benign</div>
+            <div data-hf-id="hf-xbow" class="s6-out" id="s6-o2"><span data-hf-id="hf-2bhs" class="ok">✓</span>  smoke-log-injection-authorized-keys <span data-hf-id="hf-ee35" class="atk">attack</span></div>
+            <div data-hf-id="hf-uv59" class="s6-out" id="s6-o3"><span data-hf-id="hf-14kp" class="ok">✓</span>  smoke-log-audit-mentions-attacks   benign</div>
+            <div data-hf-id="hf-41g0" class="s6-out" id="s6-o4"><span data-hf-id="hf-1ivq" class="ok">✓</span>  smoke-web-injection-exfil-env      <span data-hf-id="hf-4qbp" class="atk">attack</span></div>
+            <div data-hf-id="hf-htjz" class="s6-out" id="s6-o5"><span data-hf-id="hf-0byn" class="ok">✓</span>  smoke-pr-comment-ci-curl-pipe      <span data-hf-id="hf-5x8s" class="atk">attack</span></div>
+            <div data-hf-id="hf-26rx" id="s6-pass">PASSED · 3/3 attacks caught · 2/2 benign clean</div>
+          </div>
+        </div>
+
+        <div data-hf-id="hf-pfg2" id="s6-lock">
+          <div data-hf-id="hf-su6e" id="s6-word">agent-on-agent<span data-hf-id="hf-ldym">-ids</span></div>
+          <div data-hf-id="hf-dzqe" id="s6-tag">Intrusion detection for AI agents — <b data-hf-id="hf-h0cy">by AI agents.</b></div>
+          <div data-hf-id="hf-t1g2" id="s6-url">github.com/stanibaj/agent-on-agent-ids</div>
+        </div>
+      </div>
+
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          const typed = document.getElementById("s6-typed");
+          const cmd = "aoa-ids install opik --smoke-test";
+
+          tl.fromTo("#s6-term", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.45, ease: "power3.out" }, 0);
+          const p = { n: 0 };
+          tl.fromTo(
+            p,
+            { n: 0 },
+            {
+              n: cmd.length,
+              duration: 0.95,
+              ease: "none",
+              onUpdate: () => {
+                typed.textContent = cmd.slice(0, Math.round(p.n));
+              },
+            },
+            0.3,
+          );
+          ["#s6-o0", "#s6-o1", "#s6-o2", "#s6-o3", "#s6-o4", "#s6-o5"].forEach((sel, i) => {
+            tl.fromTo(sel, { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.16, ease: "power2.out" }, 1.45 + i * 0.22);
+          });
+          tl.fromTo("#s6-pass", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power3.out" }, 2.85);
+
+          // Terminal demotes; the lockup takes the frame and holds to the end (loop point).
+          tl.to("#s6-term", { opacity: 0, y: -80, scale: 0.9, duration: 0.45, ease: "power3.in" }, 3.55);
+          tl.fromTo("#s6-word", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.55, ease: "expo.out" }, 3.85);
+          tl.fromTo("#s6-tag", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 4.1);
+          tl.fromTo("#s6-url", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.45, ease: "power3.out" }, 4.3);
+
+          window.__timelines["s6-cta"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #bg {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+        }
+      /* Persistent background: hairline trace grid + slow drift. Flat colours on purpose (GIF-friendly). */
+      #bg-grid {
+        position: absolute;
+        left: -120px;
+        top: -120px;
+        width: 2160px;
+        height: 1320px;
+        background-image:
+          linear-gradient(#16211c 2px, transparent 2px),
+          linear-gradient(90deg, #16211c 2px, transparent 2px);
+        background-size: 120px 120px;
+      }
+      #bg-rail {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 64px;
+        height: 2px;
+        background: #26362f;
+        transform-origin: 0 50%;
+      }
+      </style>
+      <div data-hf-id="hf-7p0p" id="bg" data-composition-id="bg" data-width="1920" data-height="1080">
+        <div data-hf-id="hf-ri4e" id="bg-grid" data-layout-allow-overflow=""></div>
+        <div data-hf-id="hf-ibm5" id="bg-rail"></div>
+      </div>
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+          // The grid stays still on purpose: a full-frame drift changes every pixel each frame and
+          // defeats GIF inter-frame compression (16 MB vs a few MB). The progress rail carries the ambient motion.
+          tl.fromTo("#bg-rail", { scaleX: 0 }, { scaleX: 1, duration: 31, ease: "none" }, 0);
+          window.__timelines["bg"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

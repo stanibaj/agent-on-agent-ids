@@ -1,5 +1,9 @@
 # agent-on-agent-ids
 
+<p align="center">
+  <img src="docs/assets/aoa-ids-demo.gif" alt="A poisoned log line makes an AI sysadmin agent append an SSH key; the AOA-IDS judge flags it as an indirect prompt injection (OWASP LLM01, ASI01, MITRE ATLAS AML.T0051.001, ATT&CK T1098.004), Comet Opik fires an alert, and the installer's smoke test passes." width="100%">
+</p>
+
 **Agent-on-agent intrusion detection.** An AI agent that watches your AI agents' traces, catches attacks on them, maps each one to **OWASP Top 10 for LLM Apps 2025**, **OWASP Top 10 for Agentic Applications 2026**, **MITRE ATLAS** and **MITRE ATT&CK**, and fires an alert when an agent is actually under attack.
 
 It ships as a portable LLM-as-a-judge spec, plus a one-command installer for **Comet Opik** with a built-in smoke test. It runs on **small fast chat models** (e.g. `~anthropic/claude-haiku-latest`) in agent-as-a-judge mode, or on **decision models** such as **TypeSafe Jev**. Exports for **Langfuse**, **Arize Phoenix**, the OpenRouter Decisions API and any OpenAI-compatible pipeline are included.
