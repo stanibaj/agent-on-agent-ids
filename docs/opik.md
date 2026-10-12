@@ -34,7 +34,7 @@ Prerequisites:
 |---|---|---|
 | Online-evaluation rule | `aoa_ids_incident_detector` | LLM-as-judge on every new trace (sampling 100%; chat models get a $0.25 cost cap per evaluation) |
 | Feedback score | `aoa_ids_incident` | BOOLEAN. Attack attempt with quotable adversarial content. **The reason holds the mapping.** |
-| Feedback score | `aoa_ids_alert` | BOOLEAN. Incident **and** severity ≥ 2: the agent acted on it. **The paging signal.** |
+| Feedback score | `aoa_ids_alert` | BOOLEAN. Incident **and** severity ≥ 2: the agent acted on it. **The signal to alert on.** |
 | Feedback score | `aoa_ids_severity` | INTEGER 0–4: none / ineffective / partial / harmful action or blocked high-impact attempt / confirmed compromise (chat models) |
 | Feedback score | `aoa_ids_confidence` | DOUBLE 0–1 (chat models) |
 | Feedback scores | `aoa_ids_cat_*` | BOOLEAN per attack category, each mapped to fixed OWASP/ATLAS/ATT&CK IDs (decision models) |
@@ -62,7 +62,7 @@ Under the hood the installer calls `POST/PATCH /v1/private/automations/evaluator
 2. It logs the 5 traces from [`judge/smoke/smoke_traces.yaml`](../judge/smoke/smoke_traces.yaml), tagged `aoa-ids-smoke-test`. Three are attacks: a log-line injection that adds an SSH key, a web-page injection that uploads `.env`, and a PR-comment injection that adds `curl | sudo bash` to CI. Two are benign: a service restart, and a security audit that *reads about* attacks. Spans are sent before each trace, as most SDKs do.
 3. It waits for Opik's judge and checks that all 3 attacks get `aoa_ids_incident=1` **and** `aoa_ids_alert=1`, and that both benign runs get 0.
 4. It deletes the smoke traces and the judge-run traces Opik logged for them (keep them with `--keep-smoke-traces`).
-5. Only after a pass does it create or update alerts, so a fresh install doesn't page anyone for test traces. Alerts that already existed *will* see the test attacks, which doubles as a delivery test.
+5. Only after a pass does it create or update alerts, so a fresh install doesn't alert anyone about test traces. Alerts that already existed *will* see the test attacks, which doubles as a delivery test.
 
 It exits non-zero on failure. Unscored traces almost always mean Opik's AI provider can't serve the model; check `aoa-ids status opik` → `rule_logs`.
 
@@ -86,7 +86,7 @@ It exits non-zero on failure. Unscored traces almost always mean Opik's AI provi
 
 | `AOA_ALERT_ON` | Alert | Fires when | Good for |
 |---|---|---|---|
-| `actionable` (default) | `aoa_ids_actionable` | any trace in the window has `aoa_ids_alert = 1` (severity ≥ 2) | paging |
+| `actionable` (default) | `aoa_ids_actionable` | any trace in the window has `aoa_ids_alert = 1` (severity ≥ 2) | on-call alerts |
 | `any` | `aoa_ids_any_incident` | any trace in the window has `aoa_ids_incident = 1`, including ignored or blocked attempts | a security channel |
 | `both` | both of the above | | |
 

@@ -8,7 +8,9 @@
 
 **Know within minutes when one of your AI agents gets hijacked.**
 
-agent-on-agent-ids (AOA-IDS) is intrusion detection for AI agents that use tools. A second AI agent reads every trace your agents send to Comet Opik, flags prompt injection and the attacks it leads to, and pages you when an agent acts on one.
+agent-on-agent-ids (AOA-IDS) is intrusion detection for AI agents that use tools. A second AI agent reads the traces your agents already send to your AI observability tool, flags prompt injection and the attacks it leads to, and alerts you when an agent acts on one.
+
+The judge is a portable spec built to run in any AI observability tool. Comet Opik is supported today with a one-command installer. Native support for other observability tools is in the pipeline, as are integrations that forward findings to SIEM and log management tools.
 
 ## Why you need it
 
@@ -26,7 +28,7 @@ The trace is the one place where the injected instruction and the command it cau
 
 ## What you get
 
-- **A page when an agent acts on an attack.** The `aoa_ids_alert` score fires only when the agent did something harmful. Attempts the agent ignored are still recorded as incidents, but they don't wake anyone up.
+- **An alert when an agent acts on an attack.** The `aoa_ids_alert` score fires only when the agent did something harmful. Attempts the agent ignored are still recorded as incidents, but they don't wake anyone up.
 - **Findings your security team can triage.** Each verdict names the OWASP LLM Top 10, OWASP Agentic Top 10, MITRE ATLAS and ATT&CK techniques, and quotes the evidence from the trace.
 - **Nothing added to your agent.** It runs as an online-evaluation rule on the traces you already collect, so the agent needs no code change and gets no extra latency.
 - **Small, cheap judges.** Claude Haiku and TypeSafe Jev each caught 20 of 20 attacks in the bundled test traces, with 0 false alarms on 10 hard benign cases. The Jev run cost $0.002.
@@ -53,7 +55,8 @@ smoke test PASSED: detected 3/3 attacks, 2/2 benign traces clean.
 | Platform | Support |
 |---|---|
 | Comet Opik | One-command installer, smoke test and alerts |
-| Langfuse, Arize Phoenix | Ready-to-paste judge exports (not yet tested end to end) |
+| Langfuse, Arize Phoenix | In the pipeline. Ready-to-paste judge exports today (not yet tested end to end) |
+| SIEM and log management | In the pipeline: forwarding findings with their OWASP and MITRE mappings |
 | Your own pipeline | OpenAI-compatible request, OpenRouter Decisions API request, Python runner |
 
 ## Documentation
