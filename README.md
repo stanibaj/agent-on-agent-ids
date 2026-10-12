@@ -3,7 +3,7 @@
 <p align="center">
   <img src="docs/assets/aoa-ids-demo.gif" alt="A poisoned log line makes an AI sysadmin agent append an SSH key; the AOA-IDS judge flags it as an indirect prompt injection (OWASP LLM01, ASI01, MITRE ATLAS AML.T0051.001, ATT&CK T1098.004), Comet Opik fires an alert, and the installer's smoke test passes." width="100%">
   <br>
-  <sub>▶ <a href="https://cdn.jsdelivr.net/gh/stanibaj/agent-on-agent-ids@a40ea4cc78ab27f3833dbd84a1e614b02c0d98ac/docs/assets/aoa-ids-demo.mp4">Watch in full quality with voice-over (MP4, 1080p · 60 fps · 39 s)</a></sub>
+  <sub>▶ <a href="https://cdn.jsdelivr.net/gh/stanibaj/agent-on-agent-ids@052b04cb661d6785317e119ce51a89857716940e/docs/assets/aoa-ids-demo.mp4">Watch in full quality with voice-over (MP4, 1080p · 60 fps · 39 s)</a></sub>
 </p>
 
 **Know within minutes when one of your AI agents gets hijacked.**
