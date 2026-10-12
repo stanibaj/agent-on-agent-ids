@@ -42,7 +42,7 @@
           const tl = gsap.timeline({ paused: true });
           // The grid stays still on purpose: a full-frame drift changes every pixel each frame and
           // defeats GIF inter-frame compression (16 MB vs a few MB). The progress rail carries the ambient motion.
-          tl.fromTo("#bg-rail", { scaleX: 0 }, { scaleX: 1, duration: 31, ease: "none" }, 0);
+          tl.fromTo("#bg-rail", { scaleX: 0 }, { scaleX: 1, duration: 39, ease: "none" }, 0);
           window.__timelines["bg"] = tl;
         })();
       </script>

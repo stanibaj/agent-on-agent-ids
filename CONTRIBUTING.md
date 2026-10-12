@@ -65,7 +65,7 @@ This produces a file users paste into the platform by hand.
 2. Build the prompt with `Spec.messages(...)` (chat models) or `Spec.decision_state(...)` (decision models). Never copy prompt text into the renderer; it has to stay in sync with `judge/`.
 3. If the platform uses a different placeholder syntax, add a converter next to `rename_variables` / `to_fstring` in `aoaids/spec.py`, with a unit test that literal braces survive.
 4. Run `aoa-ids --env-file /dev/null export`. This uses the generic profile, so no private profile text ends up in `dist/`. Commit the regenerated `dist/` files.
-5. Add a short "how to import" paragraph under *Other observability stacks* in the README, marked as **render-only, not tested end to end**.
+5. Add a short "how to import" paragraph to [`docs/other-platforms.md`](docs/other-platforms.md), marked as **render-only, not tested end to end**.
 
 ### Level 2: full adapter (install, smoke test, alerts)
 
@@ -83,10 +83,10 @@ Rules every adapter must follow:
 
 - **Same score names, same meaning.** Emit `aoa_ids_incident` and `aoa_ids_alert` exactly. Dashboards, alerts and docs depend on them. If the platform has no boolean type, use numeric 0/1.
 - **Same smoke-test pass criteria:** all 3 attacks get `aoa_ids_incident = 1` **and** `aoa_ids_alert = 1`, and both benign traces get 0. Do not loosen this per platform.
-- **Send spans before the finished trace** when replaying smoke traces. That is what most SDKs do, and some evaluators only see spans that already exist when the trace arrives (see the README's `{{spans}}` timing note).
+- **Send spans before the finished trace** when replaying smoke traces. That is what most SDKs do, and some evaluators only see spans that already exist when the trace arrives (see the `{{spans}}` timing note in [`docs/models.md`](docs/models.md#modes-chat-models)).
 - **Clean up** smoke traces, and any evaluator-run artefacts the platform creates, unless `--keep-smoke-traces` is given.
 - **Never block an install on an informational check** (like the Jev context check); report it instead.
-- **Alerting:** if the platform has native score alerts, map the spec's `alerting` policies to them (an alert on `aoa_ids_alert` is the default). If it has none, say so in the README and document an alternative, such as polling scores or a webhook from the platform's automation feature.
+- **Alerting:** if the platform has native score alerts, map the spec's `alerting` policies to them (an alert on `aoa_ids_alert` is the default). If it has none, say so in the platform's page under `docs/` and document an alternative, such as polling scores or a webhook from the platform's automation feature.
 - **Agent mode** (`{{trace}}`, a judge with tools) may be Opik-specific. Other platforms normally use the `mapped` prompt or the decision-model variant.
 
 Wiring it up. These are the generic pieces you will touch for the *second* platform; please do them as part of that PR:
@@ -95,7 +95,7 @@ Wiring it up. These are the generic pieces you will touch for the *second* platf
 2. **Shared smoke-test logic:** move the pass/fail evaluation and the result table out of `opik.smoke_test()` into a shared function (e.g. `aoaids/smoke.py`) that takes two adapter callbacks: *log these traces* and *fetch scores for these trace ids*. Both platforms then use identical criteria.
 3. **Settings:** keep `AOA_JUDGE_*` and `AOA_ALERT_*` shared, and give each adapter its own credentials (`LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, …). Add them to `.env.example` with comments.
 
-Then add `tests/test_<platform>_payload.py` (offline payload tests, plus validation against the platform SDK's models if it has them), and a README section with quickstart, UI steps and limitations. Finally, run the smoke test against a real instance and paste its output into the PR.
+Then add `tests/test_<platform>_payload.py` (offline payload tests, plus validation against the platform SDK's models if it has them), and a `docs/<platform>.md` page with quickstart, UI steps and limitations (linked from the README's *Works with* table). Finally, run the smoke test against a real instance and paste its output into the PR.
 
 ---
 
@@ -202,10 +202,10 @@ Profiles tell the judge what normal work looks like, which is the main lever aga
 
 - [ ] `pytest` passes.
 - [ ] Rule or prompt changes: validation summaries for both engines and both profiles are in the PR description, and the thresholds are met.
-- [ ] New platform: smoke-test output from a real instance is in the PR description, payload tests are added, and the README section is updated.
+- [ ] New platform: smoke-test output from a real instance is in the PR description, payload tests are added, and the `docs/` page is added.
 - [ ] `aoa-ids --env-file /dev/null export` has been run and `dist/` committed (if the prompt or spec changed).
 - [ ] Fixtures, profiles and docs contain only fictitious data.
-- [ ] README updated where behaviour or setup changed.
+- [ ] `docs/` (and the README, if the quickstart changed) updated where behaviour or setup changed.
 
 ## Reporting security issues
 

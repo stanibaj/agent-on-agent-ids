@@ -2,9 +2,9 @@
 
 | Stem | Source | How it was made |
 |---|---|---|
-| `../assets/audio/music.m4a` | **Google Lyria 3** (`google/lyria-3-clip-preview` via OpenRouter, $0.04 per 30 s take) | `lyria_take.py` with the prompt in `lyria_req.json`; best of 3 takes by loudness envelope (quiet tension → phrase drops on an 8 s grid). Trimmed to 28.5 s, faded, normalised to about −17 LUFS. Mounted at **2.5 s** so its drop lands on the 10.5 s reveal. |
-| `../assets/audio/vo-1.m4a` … `vo-7.m4a` | **ElevenLabs** text-to-speech (`eleven_v4`, premade voice "Brian") | `gen_vo.py brian` makes one clip per scene line (request stitching keeps the tone continuous); silence trimmed, all lines given one shared gain to about −16 LUFS, then placed at their scene times in `index.html` (group `voiceover`). Verified by transcribing the final mix with ElevenLabs Scribe. |
-| `../assets/audio/sfx.m4a` | **ElevenLabs** sound effects (`eleven_text_to_sound_v2`) | `gen_sfx.py` generates 18 effects; `mix_sfx.py` places 122 events on the frames of the animations they belong to (scene start + tween time) and mixes one stem, about −21 LUFS. |
+| `../assets/audio/music.m4a` | **Google Lyria 3** (`google/lyria-3-clip-preview` via OpenRouter, $0.04 per 30 s take) | `lyria_take.py` with the prompt in `lyria_req.json`; best of 3 takes by loudness envelope (quiet tension → phrase drops on an 8 s grid). Trimmed to 28.5 s, faded, normalised to about −17 LUFS, then its 8 s intro phrase was repeated once (36.5 s) to carry the "who noticed?" scene. Mounted at **2.5 s** so the drop lands on the 18.5 s reveal. |
+| `../assets/audio/vo-*.m4a` (10 clips) | **ElevenLabs** text-to-speech (`eleven_v4`, premade voice "Brian") | `gen_vo.py brian` makes one clip per scene line (request stitching keeps the tone continuous); silence trimmed, each line levelled to about −17 LUFS (vo-3a…3c also sped up 7%), then placed at their scene times in `index.html` (group `voiceover`). Verified by transcribing the final mix with ElevenLabs Scribe. |
+| `../assets/audio/sfx.m4a` | **ElevenLabs** sound effects (`eleven_text_to_sound_v2`) | `gen_sfx.py` generates 18 effects; `mix_sfx.py` places 131 events on the frames of the animations they belong to (scene start + tween time) and mixes one stem, about −21 LUFS. |
 
 The music bed is carved against the `voiceover` group with HyperFrames' voiceover carve
 (`hyperframes-audio/scripts/carve.mjs --comp index.html --bed music`): six voice-following EQ dips
@@ -17,7 +17,8 @@ python3 lyria_take.py take.mp3                 # needs OPENROUTER_API_KEY and >=
 python3 gen_sfx.py sfx/                        # needs an ElevenLabs key in ~/.elevenlabs
 python3 gen_vo.py vo/ brian                     # voice-over lines (eleven_v4)
 python3 mix_sfx.py sfx/ sfx_stem.wav           # standard library only
-ffmpeg -i take.mp3 -af "atrim=0:28.5,afade=t=out:st=26.9:d=1.6,loudnorm=I=-19:TP=-3" -c:a aac -b:a 256k ../assets/audio/music.m4a
+ffmpeg -i take.mp3 -af "atrim=0:28.5,afade=t=out:st=26.9:d=1.6,loudnorm=I=-19:TP=-3" -c:a aac -b:a 256k music_28s.m4a
+ffmpeg -i music_28s.m4a -filter_complex "[0:a]asplit=3[a][b][c];[a]atrim=0:8,asetpts=PTS-STARTPTS[x];[b]atrim=0:8,asetpts=PTS-STARTPTS[y];[c]atrim=8,asetpts=PTS-STARTPTS[z];[x][y][z]concat=n=3:v=0:a=1" -c:a aac -b:a 256k ../assets/audio/music.m4a
 ffmpeg -i sfx_stem.wav -af "loudnorm=I=-21:TP=-3" -c:a aac -b:a 256k ../assets/audio/sfx.m4a
 ```
 

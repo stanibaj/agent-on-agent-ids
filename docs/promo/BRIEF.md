@@ -7,13 +7,14 @@ destination: github-readme-gif
 aspect: "16:9"
 language: en
 audience: platform / security engineers running AI agents with tools
-length: "~30s, silent, loops"
+length: "39s; GIF silent and loops, MP4 narrated"
 ---
 
 ## Intent
 
 Promote the GitHub repo stanibaj/agent-on-agent-ids as the animated GIF at the top of its README.
-Chosen telling (internal pitch round, autonomous run): **attack → detection → alert → proof → install**.
+Chosen telling (internal pitch round, autonomous run): **attack → why existing tools miss it → detection → alert → proof → install**.
+The "who noticed?" beat (added 2026-10-12) answers why anyone needs this: the guardrail, the EDR/SIEM and the trace store all pass the attack.
 Show a real indirect prompt injection hijacking a sysadmin agent (a poisoned log line makes it add an SSH key),
 then the AOA-IDS judge catching it with the exact verdict format the repo produces, the Opik alert firing,
 measured results, and the one-command install with its smoke test. Typical direction left behind: abstract

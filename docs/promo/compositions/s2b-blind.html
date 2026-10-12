@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+  </head>
+  <body>
+    <template>
+      <style>
+        #s2b-blind {
+          position: absolute;
+          inset: 0;
+          font-family: "JetBrains Mono", monospace;
+          color: #e7eee9;
+        }
+        #s2b-kicker {
+          position: absolute;
+          left: 110px;
+          top: 130px;
+          font-size: 32px;
+          color: #93a79d;
+          letter-spacing: 0.06em;
+        }
+        #s2b-title {
+          position: absolute;
+          left: 110px;
+          top: 185px;
+          font-family: "Archivo Black", sans-serif;
+          font-size: 96px;
+          line-height: 1;
+          letter-spacing: -0.04em;
+          white-space: nowrap;
+        }
+        .s2b-row {
+          position: absolute;
+          left: 110px;
+          right: 110px;
+          height: 140px;
+          display: flex;
+          align-items: center;
+          gap: 30px;
+          padding: 0 40px;
+          background: #111a16;
+          border: 3px solid #26362f;
+          border-radius: 14px;
+        }
+        #s2b-r1 {
+          top: 350px;
+        }
+        #s2b-r2 {
+          top: 520px;
+        }
+        #s2b-r3 {
+          top: 690px;
+        }
+        .s2b-layer {
+          width: 430px;
+          flex: none;
+          font-family: "Archivo Black", sans-serif;
+          font-size: 46px;
+          letter-spacing: -0.02em;
+          white-space: nowrap;
+        }
+        .s2b-saw {
+          flex: 1;
+          font-size: 34px;
+          color: #93a79d;
+          white-space: nowrap;
+          overflow: hidden;
+        }
+        .s2b-saw b {
+          color: #e7eee9;
+          font-weight: 400;
+        }
+        .s2b-chip {
+          position: relative;
+          width: 250px;
+          height: 66px;
+          flex: none;
+        }
+        .s2b-chip span {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 10px;
+          font-size: 32px;
+          font-weight: 700;
+          white-space: nowrap;
+        }
+        .s2b-pass {
+          border: 3px solid #71d6a0;
+          color: #71d6a0;
+        }
+        #s2b-unread {
+          background: #ffb21e;
+          color: #0a0f0d;
+        }
+        #s2b-punch {
+          position: absolute;
+          left: 110px;
+          top: 880px;
+          font-family: "Archivo Black", sans-serif;
+          font-size: 58px;
+          letter-spacing: -0.03em;
+          white-space: nowrap;
+        }
+        #s2b-punch span {
+          color: #ff5b47;
+        }
+      </style>
+
+      <div id="s2b-blind" data-composition-id="s2b-blind" data-width="1920" data-height="1080">
+        <div id="s2b-kicker">// WHO NOTICED?</div>
+        <div id="s2b-title">Every check passed.</div>
+
+        <div class="s2b-row" id="s2b-r1">
+          <div class="s2b-layer">Prompt guardrail</div>
+          <div class="s2b-saw">saw <b>"summarize the web-01 logs"</b></div>
+          <div class="s2b-chip" id="s2b-c1"><span class="s2b-pass">✓ SAFE</span></div>
+        </div>
+        <div class="s2b-row" id="s2b-r2">
+          <div class="s2b-layer">EDR / SIEM</div>
+          <div class="s2b-saw">saw <b>svc-agent: sudo tee -a authorized_keys</b></div>
+          <div class="s2b-chip" id="s2b-c2"><span class="s2b-pass">✓ ROUTINE</span></div>
+        </div>
+        <div class="s2b-row" id="s2b-r3">
+          <div class="s2b-layer">Traces</div>
+          <div class="s2b-saw">stored <b>14 spans, attack included</b></div>
+          <div class="s2b-chip" id="s2b-c3"><span class="s2b-pass" id="s2b-stored">✓ STORED</span><span id="s2b-unread">UNREAD</span></div>
+        </div>
+
+        <div id="s2b-punch">All green. The agent is <span>backdoored.</span></div>
+      </div>
+
+      <script>
+        (function () {
+          const tl = gsap.timeline({ paused: true });
+
+          tl.fromTo("#s2b-kicker", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 0.05);
+          tl.fromTo("#s2b-title", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.1);
+
+          // One row per narration line: the layer slides in, then its green verdict pops.
+          [
+            ["#s2b-r1", "#s2b-c1", 0.15],
+            ["#s2b-r2", "#s2b-c2", 2.35],
+            ["#s2b-r3", "#s2b-c3", 5.0],
+          ].forEach(([row, chip, at]) => {
+            tl.fromTo(row, { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.45, ease: "power3.out" }, at);
+            tl.fromTo(chip, { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, at + 0.6);
+          });
+          tl.set("#s2b-unread", { opacity: 0 }, 0);
+
+          // "...and nobody read it": the other layers fade back, the trace row turns amber (the watcher's colour).
+          tl.to(["#s2b-r1", "#s2b-r2", "#s2b-title"], { opacity: 0.3, duration: 0.4, ease: "power2.out" }, 6.7);
+          tl.to("#s2b-r3", { borderColor: "#ffb21e", duration: 0.3, ease: "power2.out" }, 6.7);
+          tl.to("#s2b-stored", { opacity: 0, duration: 0.2 }, 6.7);
+          tl.fromTo("#s2b-unread", { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 6.75);
+          tl.fromTo("#s2b-punch", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 6.9);
+
+          tl.to(["#s2b-kicker", "#s2b-title", ".s2b-row", "#s2b-punch"], { opacity: 0, duration: 0.3, ease: "power2.in" }, 7.65);
+
+          window.__timelines["s2b-blind"] = tl;
+        })();
+      </script>
+    </template>
+  </body>
+</html>

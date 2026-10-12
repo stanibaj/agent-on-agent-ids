@@ -14,7 +14,8 @@ import sys
 import wave
 
 SR = 48000
-DURATION = 31.0
+DURATION = 39.0
+BLIND = 8.0  # length of the 'who noticed' scene inserted at 10.5s; every later scene starts this much later
 SFX_DIR, OUT = sys.argv[1], sys.argv[2]
 
 # Sounds whose main transient sits late in the file: trigger them early so the hit lands on the frame.
@@ -46,7 +47,10 @@ def load(name: str, rate: float = 1.0) -> array.array:
 events: list[tuple[float, str, float, float, float]] = []  # (time, sound, gain_dB, rate, fade_out_s)
 
 
-def add(t: float, name: str, gain_db: float, rate: float = 1.0, fade_out: float = 0.0) -> None:
+def add(t: float, name: str, gain_db: float, rate: float = 1.0, fade_out: float = 0.0, shift: bool = True) -> None:
+    """Times are written on the original 31 s cut; events from the reveal on move by BLIND."""
+    if shift and t >= 10.0:
+        t += BLIND
     events.append((t - LEAD.get(name, 0.0), name, gain_db, rate, fade_out))
 
 
@@ -65,12 +69,20 @@ typing(1.45, 2.80, 0.075, +4)               # "…and it reads untrusted text al
 
 # --- Scene 2: attack (4–10.5s) ----------------------------------------------------------
 for t in (4.35, 4.75, 4.95, 5.10, 5.25, 5.40, 5.60, 7.00):
-    add(t, "data_blip", -16)                # trace rows stream in
+    add(t, "data_blip", -23)                # trace rows stream in (kept low: they sit under "poisoned")
 add(6.00, "danger_stab", -11)               # red band marks the injected instruction
 typing(7.20, 8.10, 0.07, +4)                # agent types the backdoor command
 add(8.15, "error_buzz", -12)                # "exit 0 · key appended"
 add(8.85, "ironic_ding", -14)               # "web-01 logs look normal."
-add(10.50, "riser2", -3)                    # builds into the reveal (peak lands on the cut)
+
+# --- Scene 2b: who noticed? (10.5–18.5s, absolute times) -----------------------------------
+add(10.60, "swoosh", -14, shift=False)              # "Every check passed."
+for i, t in enumerate((10.65, 12.85, 15.50)):       # guardrail · SIEM · traces rows slide in
+    add(t, "card_whoosh", -13, shift=False)
+    add(t + 0.62, "ok_blip", -11, (1.0, 1.06, 1.12)[i], shift=False)   # green verdict chips
+add(17.22, "error_buzz", -15, shift=False)          # trace row turns amber: UNREAD
+add(17.40, "danger_stab", -12, shift=False)         # "The agent is backdoored."
+add(10.50, "riser2", -8)                            # builds into the reveal (peak lands on the cut); under the VO
 
 # --- Scene 3: detection (10.5–17.5s) ----------------------------------------------------
 add(10.52, "reveal_braam", -15, fade_out=1.0)   # "ANOTHER AGENT"
