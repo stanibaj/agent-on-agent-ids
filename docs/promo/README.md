@@ -20,7 +20,7 @@ ffmpeg -i renders/aoa-ids-promo.mp4 -i /tmp/palette.png \
   -loop 0 -y ../assets/aoa-ids-demo.gif
 ```
 
-`index.html` mounts the background, six scene sub-compositions (`compositions/s1-hook.html` … `s6-cta.html`) and the HUD.
+`index.html` mounts the soundtrack (music + sound effects, see [`audio/README.md`](audio/README.md)), the background, six scene sub-compositions (`compositions/s1-hook.html` … `s6-cta.html`) and the HUD.
 Design tokens live in `frame.md`; the storyboard and brief document the intent. Every claim in the video comes from the
 repo's real outputs (verdict format, smoke test, `scripts/validate_judge.py` results).
 

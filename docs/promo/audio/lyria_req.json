@@ -1,0 +1,5 @@
+{
+  "model": "google/lyria-3-clip-preview",
+  "modalities": ["text", "audio"],
+  "messages": [{"role": "user", "content": "Instrumental cybersecurity product promo music, 120 BPM, A minor, dark modern electronic, cinematic, no vocals. Structure for a 30-second clip: 0-4s ominous sub-bass drone and dark synth pad (a threat appears); 4-10s tense ticking pulse, uneasy and dissonant, a short riser into a hard drop at 10s; 10-17s confident driving beat with punchy kick, deep bass and a bright arpeggiated synth (a guardian takes over); 17-25s energetic and uplifting, building momentum; 25-30s triumphant resolve onto a warm major chord with a clean ending. Premium, polished mix, suitable as background under on-screen text."}]
+}
