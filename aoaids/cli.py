@@ -5,8 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import replace
 
-from . import __version__
+from . import __version__, notify
 from .adapters import exports, opik
 from .config import Settings
 from .spec import Spec
@@ -32,6 +33,14 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("smoke-test", help="run only the 5-trace smoke test against an installed judge")
     p.add_argument("target", choices=["opik"])
     p.add_argument("--keep-smoke-traces", action="store_true")
+
+    p = sub.add_parser("coverage", help="share of recent traces the judge scored; exits 2 when below the minimum")
+    p.add_argument("target", choices=["opik"])
+    p.add_argument("--hours", type=float, help="look-back window (default AOA_COVERAGE_HOURS, 24)")
+    p.add_argument("--min", type=float, dest="minimum", help="minimum coverage, 0-1 (default AOA_COVERAGE_MIN, 0.95)")
+    p.add_argument("--notify", action="store_true",
+                   help="send a notice to the alert destination when coverage is low (PagerDuty also gets resolves)")
+    p.add_argument("--json", action="store_true", help="print the full report as JSON")
 
     p = sub.add_parser("export", help="write import-ready files to dist/")
     p.add_argument("targets", nargs="*", choices=list(exports.TARGETS), help="default: all")
@@ -60,6 +69,8 @@ def main(argv: list[str] | None = None) -> int:
                 return 1
             if not opik.smoke_test(client, spec, settings, project_id, print, keep=args.keep_smoke_traces):
                 return 1
+        elif args.command == "coverage":
+            return coverage(spec, settings, args)
         elif args.command == "uninstall":
             print("\n".join(opik.uninstall(spec, settings)))
         elif args.command == "status":
@@ -70,10 +81,30 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "render":
             for message in spec.messages(mode=args.mode, output=args.output, profile_file=settings.agent_profile_file):
                 print(f"===== {message.role.upper()} =====\n{message.content}\n")
-    except opik.OpikError as error:
+    except (opik.OpikError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
     return 0
+
+
+def coverage(spec: Spec, settings: Settings, args: argparse.Namespace) -> int:
+    if args.minimum is not None:
+        settings = replace(settings, coverage_min=args.minimum)
+    client = opik.OpikClient(settings)
+    project_id = client.project_id(settings.opik_project)
+    report = opik.coverage(client, spec, settings, project_id, hours=args.hours)
+    summary = opik.coverage_summary(report, settings)
+    print(json.dumps(report, indent=2, default=str) if args.json else summary)
+    if args.notify and report["healthy"] is not None:
+        kind = opik.destination(settings)
+        if kind is None:
+            print("error: --notify needs an alert destination in .env", file=sys.stderr)
+            return 1
+        title = f"AOA-IDS coverage {'OK' if report['healthy'] else 'LOW'} on Opik project {settings.opik_project}"
+        if notify.send(settings, kind, title=title, text=summary, link=opik.traces_url(settings, project_id),
+                       dedup_key=f"aoa-ids-coverage-{project_id}", resolved=report["healthy"]):
+            print(f"notice sent to {kind}")
+    return 0 if report["healthy"] is not False else 2
 
 
 if __name__ == "__main__":

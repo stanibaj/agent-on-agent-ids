@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 import uuid
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
@@ -13,6 +15,7 @@ import httpx
 import yaml
 
 from ..config import Settings
+from ..notify import PAGERDUTY_EVENTS_URL
 from ..spec import JUDGE_DIR, Spec, rename_variables
 
 SMOKE_FILE = JUDGE_DIR / "smoke" / "smoke_traces.yaml"
@@ -73,12 +76,58 @@ def rule_payload(spec: Spec, settings: Settings, project_id: str) -> dict[str, A
     }
 
 
-def alert_payloads(spec: Spec, settings: Settings, project_id: str) -> list[dict[str, Any]]:
-    if not settings.alert_webhook_url:
-        return []
-    webhook: dict[str, Any] = {"name": "aoa-ids", "url": settings.alert_webhook_url}
+def ui_base(settings: Settings) -> str:
+    return settings.opik_url.removesuffix("/api")
+
+
+def traces_url(settings: Settings, project_id: str) -> str:
+    return f"{ui_base(settings)}/{settings.opik_workspace}/projects/{project_id}/traces"
+
+
+def destination(settings: Settings) -> str | None:
+    """The one alert destination configured in .env: webhook, telegram, slack, pagerduty or None."""
+    if bool(settings.telegram_bot_token) != bool(settings.telegram_chat_id):
+        raise ValueError("set both AOA_TELEGRAM_BOT_TOKEN and AOA_TELEGRAM_CHAT_ID")
+    chosen = [name for name, value in (("webhook", settings.alert_webhook_url),
+                                       ("telegram", settings.telegram_bot_token),
+                                       ("slack", settings.slack_webhook_url),
+                                       ("pagerduty", settings.pagerduty_routing_key)) if value]
+    if len(chosen) > 1:
+        raise ValueError(f"set only one alert destination, got {', '.join(chosen)} "
+                         "(AOA_ALERT_WEBHOOK_URL, AOA_TELEGRAM_*, AOA_SLACK_WEBHOOK_URL or AOA_PAGERDUTY_ROUTING_KEY)")
+    return chosen[0] if chosen else None
+
+
+def _telegram_url(settings: Settings, project_id: str, policy: dict) -> str:
+    # Opik's general webhook POSTs its own JSON body, which the Bot API ignores; chat_id and text ride in the
+    # query string, which Telegram merges with the body. The message is fixed per alert; the evidence is in Opik.
+    text = (f"🚨 AOA-IDS {policy['name']} on Opik project {settings.opik_project}\n"
+            f"{policy['meaning']}\n\nFilter traces on feedback_scores.{policy['score']} = 1:\n"
+            f"{traces_url(settings, project_id)}")
+    query = httpx.QueryParams({"chat_id": settings.telegram_chat_id, "text": text})
+    return f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage?{query}"
+
+
+def _alert_target(settings: Settings, project_id: str, policy: dict, kind: str) -> tuple[str, dict, dict]:
+    """Opik alert_type, webhook and extra metadata for one alert policy."""
+    if kind == "slack":
+        # Opik renders Slack blocks itself and links each flagged trace under metadata.base_url.
+        return "slack", {"name": "aoa-ids", "url": settings.slack_webhook_url}, {"base_url": ui_base(settings)}
+    if kind == "pagerduty":
+        # Opik sends a PagerDuty Events v2 "trigger" and takes the routing key from the alert metadata.
+        return "pagerduty", {"name": "aoa-ids", "url": PAGERDUTY_EVENTS_URL}, {"routing_key": settings.pagerduty_routing_key}
+    if kind == "telegram":
+        return "general", {"name": "aoa-ids", "url": _telegram_url(settings, project_id, policy)}, {}
+    webhook = {"name": "aoa-ids", "url": settings.alert_webhook_url}
     if settings.alert_webhook_secret:
         webhook["secret_token"] = settings.alert_webhook_secret
+    return "general", webhook, {}
+
+
+def alert_payloads(spec: Spec, settings: Settings, project_id: str) -> list[dict[str, Any]]:
+    kind = destination(settings)
+    if kind is None:
+        return []
     levels = {"actionable": {"actionable"}, "any": {"any"}, "both": {"actionable", "any"}}.get(settings.alert_on)
     if levels is None:
         raise ValueError(f"AOA_ALERT_ON must be actionable, any or both, got {settings.alert_on!r}")
@@ -86,12 +135,13 @@ def alert_payloads(spec: Spec, settings: Settings, project_id: str) -> list[dict
     for policy in spec.alerting:
         if policy["level"] not in levels:
             continue
+        alert_type, webhook, metadata = _alert_target(settings, project_id, policy, kind)
         alerts.append({
             "name": policy["name"],
             "enabled": True,
-            "alert_type": "general",
+            "alert_type": alert_type,
             "project_id": project_id,
-            "metadata": {"source": "agent-on-agent-ids", "spec_version": spec.version},
+            "metadata": {"source": "agent-on-agent-ids", "spec_version": str(spec.version), **metadata},
             "webhook": webhook,
             "triggers": [{
                 "event_type": "trace:feedback_score",
@@ -202,6 +252,22 @@ class OpikClient:
         return self._call("GET", "v1/private/spans", params={
             "project_id": project_id, "trace_id": trace_id, "size": 500, "truncate": False}).json().get("content", [])
 
+    def provider_keys(self) -> list[dict]:
+        return self._call("GET", "v1/private/llm-provider-key").json().get("content", [])
+
+    def traces_between(self, project_id: str, start: datetime, end: datetime, limit: int) -> list[dict]:
+        """Traces started in [start, end), newest first, without their (possibly large) input and output."""
+        found, page = [], 1
+        while len(found) < limit:
+            body = self._call("GET", "v1/private/traces", params={
+                "project_id": project_id, "page": page, "size": 100, "truncate": True,
+                "from_time": _iso(start), "to_time": _iso(end), "exclude": json.dumps(["input", "output"])}).json()
+            found.extend(body.get("content", []))
+            if page * 100 >= body.get("total", 0):
+                break
+            page += 1
+        return found[:limit]
+
     def scored_traces(self, project_id: str, score: str, limit: int = 10) -> list[dict]:
         filters = json.dumps([{"field": "feedback_scores", "key": score, "operator": "is_not_empty", "value": ""}])
         body = self._call("GET", "v1/private/traces",
@@ -219,6 +285,114 @@ def _uuid7() -> str:
 
 def _iso(moment: datetime) -> str:
     return moment.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+# Opik routes a rule to a provider by the model name alone (LlmProviderFactoryImpl.getLlmProvider). Named
+# providers (self-hosted OpenAI-compatible, Ollama, Bedrock) share the custom-llm/ prefix and must list the model.
+NAMED_PROVIDERS = ("custom-llm", "ollama", "bedrock")
+
+
+def judge_provider(model: str) -> str | None:
+    """Best guess at the Opik AI provider that serves this model id."""
+    if model.startswith("custom-llm/"):
+        return "custom-llm"
+    if model.startswith("vertex_ai/"):
+        return "vertex-ai"
+    if model.startswith(("~", "openrouter/")) or "/" in model:
+        return "openrouter"
+    if model.startswith("claude"):
+        return "anthropic"
+    if model.startswith("gemini"):
+        return "gemini"
+    if model.startswith(("gpt-", "chatgpt", "o1", "o3", "o4")):
+        return "openai"
+    return None
+
+
+def provider_check(client: OpikClient, settings: Settings) -> tuple[bool, str]:
+    """Is an AI provider configured in the workspace that can run the judge model? Opik accepts a rule for a
+    model it can't run, then never scores anything and logs nothing, so check before relying on it."""
+    model, provider = settings.judge_model, judge_provider(settings.judge_model)
+    if provider is None:
+        return True, f"provider check: can't tell which Opik AI provider serves {model!r}; the smoke test will show it"
+    keys = client.provider_keys()
+    if provider == "custom-llm":
+        for key in keys:
+            models = [m.strip() for m in ((key.get("configuration") or {}).get("models") or "").split(",")]
+            if key.get("provider") in NAMED_PROVIDERS and model in models:
+                name = key.get("provider_name") or key["provider"]
+                return True, f"provider check: {model} runs on your {key['provider']} provider {name!r} ({key.get('base_url') or 'no base URL'})"
+        return False, (f"provider check: no custom/Ollama/Bedrock provider in this Opik workspace lists {model!r}. "
+                       "Add it under Configuration -> AI Providers (Models field), or Opik will never score a trace.")
+    if any(key.get("provider") == provider for key in keys):
+        note = f"provider check: {model} runs on your {provider} provider"
+        if provider == "openrouter":
+            note += " (Opik only runs OpenRouter models on its allow-list; the smoke test confirms it)"
+        return True, note
+    return False, (f"provider check: {model!r} needs the {provider} AI provider, which is not configured in this Opik "
+                   "workspace. Add it under Configuration -> AI Providers, or Opik will never score a trace.")
+
+
+TRACE_ID = re.compile(r"traceId '([0-9a-f-]{36})'")
+
+
+def coverage(client: OpikClient, spec: Spec, settings: Settings, project_id: str, hours: float | None = None,
+             grace_minutes: float = 10, limit: int = 5000) -> dict[str, Any]:
+    """Share of recent agent traces that got a verdict. A trace the judge never scored is a silent miss:
+    oversized for the model, refused by a content filter, a provider error, or a model Opik won't run."""
+    hours = settings.coverage_hours if hours is None else hours
+    end = datetime.now(timezone.utc) - timedelta(minutes=grace_minutes)  # give the judge time to finish
+    start = end - timedelta(hours=hours)
+    incident_score = next(s["name"] for s in spec.scores if s.get("primary"))
+    traces = [t for t in client.traces_between(project_id, start, end, limit)
+              if t.get("name") != "online_evaluation" and SMOKE_TAG not in (t.get("tags") or [])]
+    unscored = [t for t in traces if not any(f["name"] == incident_score for f in t.get("feedback_scores") or [])]
+    reasons: dict[str, str] = {}
+    rule = client.find_rule(project_id, settings.rule_name)
+    for log in client.rule_logs(rule["id"]) if rule else []:
+        match = TRACE_ID.search(log.get("message", ""))
+        if log.get("level") in ("ERROR", "WARN") and match:
+            reasons.setdefault(match.group(1), " ".join(log["message"].split())[:200])
+    total, scored = len(traces), len(traces) - len(unscored)
+    # With sampling below 1.0, unsampled traces are expected to stay unscored.
+    expected = total * settings.sampling_rate
+    ratio = min(scored / expected, 1.0) if expected else None
+    return {
+        "window": {"from": _iso(start), "to": _iso(end), "hours": hours},
+        "rule": rule and {"name": rule["name"], "enabled": rule.get("enabled"), "model": settings.judge_model},
+        "traces": total, "scored": scored, "unscored": len(unscored), "sampling_rate": settings.sampling_rate,
+        "coverage": ratio, "minimum": settings.coverage_min,
+        "healthy": None if ratio is None else bool(rule and rule.get("enabled")) and ratio >= settings.coverage_min,
+        "unscored_traces": [{"id": t["id"], "name": t.get("name"), "start_time": t.get("start_time"),
+                             "reason": _unscored_reason(t, reasons)} for t in unscored[:20]],
+        "unscored_by_reason": dict(Counter(_unscored_reason(t, reasons).split(":")[0] for t in unscored).most_common()),
+    }
+
+
+def _unscored_reason(trace: dict, logged: dict[str, str]) -> str:
+    if trace["id"] in logged:
+        return f"judge error: {logged[trace['id']]}"
+    if not trace.get("end_time"):
+        # Seen on agents whose scheduled runs never close their trace: the rule logs nothing for them.
+        return "trace never finished: no end_time and no rule log entry; check that the agent's tracing closes the trace"
+    return "no error logged: not sampled, still queued, the model never ran, or the log entry has rotated out"
+
+
+def coverage_summary(report: dict[str, Any], settings: Settings) -> str:
+    if report["coverage"] is None:
+        return f"coverage: no agent traces in the last {report['window']['hours']:g}h of {settings.opik_project}"
+    lines = [f"coverage: {report['scored']}/{report['traces']} traces scored in the last {report['window']['hours']:g}h "
+             f"({report['coverage']:.0%} of expected, minimum {report['minimum']:.0%}) -> "
+             f"{'OK' if report['healthy'] else 'LOW'}"]
+    if report["rule"] is None:
+        lines.append(f"  rule {settings.rule_name} not found: nothing is being scored")
+    elif not report["rule"]["enabled"]:
+        lines.append(f"  rule {settings.rule_name} is disabled")
+    for reason, count in report["unscored_by_reason"].items():
+        lines.append(f"  {count} unscored: {reason}")
+    for t in report["unscored_traces"][:5]:
+        lines.append(f"  e.g. {t['id']} {(t['name'] or '')[:40]}: {t['reason']}")
+    return "\n".join(lines)
 
 
 def context_check(client: OpikClient, spec: Spec, settings: Settings, project_id: str, sample: int = 10) -> str:
@@ -331,6 +505,12 @@ def install(spec: Spec, settings: Settings, smoke: bool = False, keep_smoke: boo
     say(f"project {settings.opik_project} ({project_id})")
     say(f"judge: {settings.judge_model} ({'decision model, mapped {{spans}}' if decision else settings.judge_mode + ' mode'})")
 
+    try:
+        ok, note = provider_check(client, settings)
+        say(note if ok else f"WARNING: {note}")
+    except OpikError as error:  # informational only; never block an install on it
+        say(f"provider check skipped: {error}")
+
     payload = rule_payload(spec, settings, project_id)
     existing = client.find_rule(project_id, settings.rule_name)
     if existing:
@@ -355,7 +535,8 @@ def install(spec: Spec, settings: Settings, smoke: bool = False, keep_smoke: boo
 
     # Alerts are created after the smoke test so a fresh install does not page anyone for test traces.
     if not alerts:
-        say("alerts skipped (AOA_ALERT_WEBHOOK_URL not set)")
+        say("alerts skipped (no destination set: AOA_ALERT_WEBHOOK_URL, AOA_TELEGRAM_*, AOA_SLACK_WEBHOOK_URL "
+            "or AOA_PAGERDUTY_ROUTING_KEY)")
     for alert in alerts:
         if alert["name"] in current:
             client.update_alert(current[alert["name"]]["id"], alert)
@@ -388,6 +569,8 @@ def status(spec: Spec, settings: Settings) -> dict[str, Any]:
     traces = client.scored_traces(project_id, incident_score)
     return {
         "project_id": project_id,
+        "provider_check": provider_check(client, settings)[1],
+        "coverage": {k: v for k, v in coverage(client, spec, settings, project_id).items() if k != "unscored_traces"},
         "rule": rule and {k: rule.get(k) for k in ("id", "name", "enabled", "sampling_rate", "type")},
         "rule_logs": client.rule_logs(rule["id"])[:10] if rule else [],
         "alerts": [{k: a.get(k) for k in ("id", "name", "enabled")}

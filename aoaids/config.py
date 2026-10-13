@@ -42,9 +42,15 @@ class Settings:
     var_output: str
     alert_webhook_url: str | None
     alert_webhook_secret: str | None
+    telegram_bot_token: str | None
+    telegram_chat_id: str | None
+    slack_webhook_url: str | None
+    pagerduty_routing_key: str | None
     alert_window_seconds: int
     alert_on: str
     rule_name: str
+    coverage_hours: float
+    coverage_min: float
 
     @classmethod
     def load(cls, env_file: str | None = ".env") -> "Settings":
@@ -67,7 +73,13 @@ class Settings:
             var_output=_env("AOA_VAR_OUTPUT", "output"),
             alert_webhook_url=_env("AOA_ALERT_WEBHOOK_URL"),
             alert_webhook_secret=_env("AOA_ALERT_WEBHOOK_SECRET"),
+            telegram_bot_token=_env("AOA_TELEGRAM_BOT_TOKEN"),
+            telegram_chat_id=_env("AOA_TELEGRAM_CHAT_ID"),
+            slack_webhook_url=_env("AOA_SLACK_WEBHOOK_URL"),
+            pagerduty_routing_key=_env("AOA_PAGERDUTY_ROUTING_KEY"),
             alert_window_seconds=int(_env("AOA_ALERT_WINDOW_SECONDS", "300")),
             alert_on=_env("AOA_ALERT_ON", "actionable"),
             rule_name=_env("AOA_RULE_NAME", "aoa_ids_incident_detector"),
+            coverage_hours=float(_env("AOA_COVERAGE_HOURS", "24")),
+            coverage_min=float(_env("AOA_COVERAGE_MIN", "0.95")),
         )

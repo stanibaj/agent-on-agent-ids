@@ -5,7 +5,7 @@
 ```bash
 git clone https://github.com/stanibaj/agent-on-agent-ids && cd agent-on-agent-ids
 python -m venv .venv && . .venv/bin/activate && pip install -e .
-cp .env.example .env   # set OPIK_API_KEY, OPIK_WORKSPACE, OPIK_PROJECT_NAME (+ AOA_ALERT_WEBHOOK_URL)
+cp .env.example .env   # set OPIK_API_KEY, OPIK_WORKSPACE, OPIK_PROJECT_NAME (+ an alert destination)
 aoa-ids install opik --smoke-test
 ```
 
@@ -26,7 +26,7 @@ smoke traces removed (5 traces, 5 judge runs).
 
 Prerequisites:
 - The Opik project already receives your agent's traces.
-- An AI provider is configured in Opik (**Configuration → AI Providers**) that serves the judge model. The default model `~anthropic/claude-haiku-latest` and TypeSafe Jev both work with the **OpenRouter** provider. See [Choosing a judge model](models.md#choosing-a-judge-model).
+- An AI provider is configured in Opik (**Configuration → AI Providers**) that serves the judge model. The default model `~anthropic/claude-haiku-latest` and TypeSafe Jev both work with the **OpenRouter** provider. To use your own provider account or a self-hosted model, see [Bring your own model](models.md#bring-your-own-model). The installer checks that a matching provider is configured, because Opik accepts a rule for a model it can't run and then never scores anything.
 
 `aoa-ids install opik` creates or updates (it is idempotent):
 
@@ -38,7 +38,7 @@ Prerequisites:
 | Feedback score | `aoa_ids_severity` | INTEGER 0–4: none / ineffective / partial / harmful action or blocked high-impact attempt / confirmed compromise (chat models) |
 | Feedback score | `aoa_ids_confidence` | DOUBLE 0–1 (chat models) |
 | Feedback scores | `aoa_ids_cat_*` | BOOLEAN per attack category, each mapped to fixed OWASP/ATLAS/ATT&CK IDs (decision models) |
-| Alert (if `AOA_ALERT_WEBHOOK_URL` or `AOA_TELEGRAM_*` is set) | `aoa_ids_actionable` | Webhook when `avg(aoa_ids_alert) > 0` in a 5-minute window, i.e. at least one actionable attack |
+| Alert (if an [alert destination](#alerting) is set) | `aoa_ids_actionable` | Fires when `avg(aoa_ids_alert) > 0` in a 5-minute window, i.e. at least one actionable attack |
 
 Other commands:
 
@@ -46,7 +46,8 @@ Other commands:
 aoa-ids install opik --smoke-test    # install, then prove it works on 5 test traces (3 attacks, 2 benign)
 aoa-ids smoke-test opik              # re-run only the smoke test against the installed rule
 aoa-ids install opik --dry-run   # print the exact REST payloads
-aoa-ids status opik              # rule, evaluator logs, alerts, latest verdicts
+aoa-ids status opik              # provider check, coverage, rule, evaluator logs, alerts, latest verdicts
+aoa-ids coverage opik            # share of recent traces the judge scored, and why the rest weren't
 aoa-ids uninstall opik           # remove rule + alerts
 aoa-ids render --mode agent      # print the prompt
 aoa-ids export                   # regenerate dist/ (Opik JSON, Langfuse, Phoenix, OpenAI)
@@ -64,7 +65,7 @@ Under the hood the installer calls `POST/PATCH /v1/private/automations/evaluator
 4. It deletes the smoke traces and the judge-run traces Opik logged for them (keep them with `--keep-smoke-traces`).
 5. Only after a pass does it create or update alerts, so a fresh install doesn't alert anyone about test traces. Alerts that already existed *will* see the test attacks, which doubles as a delivery test.
 
-It exits non-zero on failure. Unscored traces almost always mean Opik's AI provider can't serve the model; check `aoa-ids status opik` → `rule_logs`.
+It exits non-zero on failure. Unscored traces almost always mean Opik's AI provider can't serve the model; check `aoa-ids status opik` → `provider_check` and `rule_logs`.
 
 ### No-code setup in the Opik UI
 
@@ -84,6 +85,17 @@ It exits non-zero on failure. Unscored traces almost always mean Opik's AI provi
 
 ## Alerting
 
+Set one destination in `.env` and run `aoa-ids install opik` again:
+
+| Destination | Setting | What arrives |
+|---|---|---|
+| PagerDuty | `AOA_PAGERDUTY_ROUTING_KEY`: the integration key of an **Events API v2** integration on your service | An Opik-native Events v2 `trigger`, summary = alert name, with the scores and trace IDs in the custom details |
+| Slack | `AOA_SLACK_WEBHOOK_URL`: an [incoming webhook](https://api.slack.com/messaging/webhooks) for the channel | An Opik-native Slack message that links each flagged trace |
+| Telegram | `AOA_TELEGRAM_BOT_TOKEN` + `AOA_TELEGRAM_CHAT_ID` | A fixed message with a link to the project's traces ([details](#telegram)) |
+| Any webhook | `AOA_ALERT_WEBHOOK_URL` (+ `AOA_ALERT_WEBHOOK_SECRET`, sent as `Authorization: Bearer …`) | Opik's JSON event; use it for Opsgenie, Teams, n8n or a SIEM bridge |
+
+Opik builds the PagerDuty and Slack payloads itself, so there is nothing to host. Opik sends PagerDuty events with severity `info`; raise it with an event rule on the PagerDuty service if this should page at a higher urgency. To send `actionable` to PagerDuty and `any` to Slack, install twice with different `.env` files and `AOA_ALERT_ON` values.
+
 | `AOA_ALERT_ON` | Alert | Fires when | Good for |
 |---|---|---|---|
 | `actionable` (default) | `aoa_ids_actionable` | any trace in the window has `aoa_ids_alert = 1` (severity ≥ 2) | on-call alerts |
@@ -98,3 +110,34 @@ Set `AOA_TELEGRAM_BOT_TOKEN` and `AOA_TELEGRAM_CHAT_ID` instead of `AOA_ALERT_WE
 
 - Use a bot that the monitored agent can't use. If the agent's own Telegram bot sends the alerts, a hijacked agent controls the bot that reports on it.
 - The token is stored in the Opik alert's webhook URL, so anyone who can edit alerts in your Opik workspace can read it. `--dry-run` prints it too.
+
+## Coverage
+
+A detector that stops looking raises no alert. In Opik a trace can stay unscored without any error you would notice:
+- the provider rejects the call (for example, out of credits),
+- the model refuses to analyse the attack payload,
+- the trace is too large for the model's context,
+- the model isn't one Opik will run,
+- the agent never finishes the trace.
+
+`aoa-ids coverage opik` counts the agent's traces in the last `AOA_COVERAGE_HOURS` (default 24), checks how many got a verdict, and groups the rest by cause, using the rule's logs:
+
+```
+coverage: 412/480 traces scored in the last 24h (86% of expected, minimum 95%) -> LOW
+  61 unscored: trace never finished
+  7 unscored: judge error
+  e.g. 0199f3c2-… nightly-backup-check: trace never finished: no end_time and no rule log entry; check that …
+```
+
+"Trace never finished" usually means the agent's tracing never closes some runs, such as scheduled or cron jobs. Those unattended runs are then the ones left unmonitored.
+
+- Traces from the last 10 minutes are skipped, because the judge may still be working on them. Smoke-test traces and the judge's own `online_evaluation` traces are not counted.
+- With `AOA_SAMPLING_RATE` below 1.0, coverage is measured against the sampled share.
+- It exits `2` below `AOA_COVERAGE_MIN` (default 0.95), so CI or a monitoring check can use it. `--json` prints the full report, and `aoa-ids status opik` includes it.
+- `--notify` sends a notice to the alert destination when coverage is low. PagerDuty also receives a `resolve` when coverage recovers, using one incident per project. Run it from cron:
+
+```cron
+0 * * * *  cd /path/to/agent-on-agent-ids && .venv/bin/aoa-ids coverage opik --notify
+```
+
+The rule's log keeps about the last 1,000 entries, so causes for older misses may show as "no error logged".

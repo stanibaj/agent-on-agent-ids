@@ -33,6 +33,35 @@ python scripts/validate_judge.py --model <model> --profile profiles/generic.md
 
 **Opik gotcha:** Opik only runs OpenRouter models on its own allow-list (the `~…-latest` aliases and Jev are on it). A rule with any other model name is **accepted by the API but never runs, and logs nothing**. The smoke test catches this. `-latest` aliases follow new releases automatically; pin a concrete model if you need verdicts that don't change underneath you.
 
+## Bring your own model
+
+The judge reads your agents' traces, which hold whatever your agents saw: secrets, customer data, internal hostnames. By default those traces go to the judge model through OpenRouter. If they must stay under your own contract, region or network, run the judge on a provider you control. AOA-IDS needs no change for this. It sends `AOA_JUDGE_MODEL` to Opik, and Opik picks the AI provider from the model id:
+
+| Where the judge runs | Add in Opik (**Configuration → AI Providers**) | `AOA_JUDGE_MODEL` |
+|---|---|---|
+| OpenRouter (default) | OpenRouter | `~anthropic/claude-haiku-latest`, `typesafe/jev-1.13`, … |
+| Your Anthropic, OpenAI or Gemini account | Anthropic / OpenAI / Gemini | a model id Opik lists for that provider, e.g. `claude-haiku-4-5-20251001` |
+| Google Cloud | Vertex AI | `vertex_ai/gemini-2.5-flash`, … |
+| AWS | Bedrock | `custom-llm/<provider name>/<model>` |
+| Your own network: vLLM, Ollama, or a LiteLLM proxy in front of Azure OpenAI | Custom provider (OpenAI-compatible URL) or Ollama | `custom-llm/<provider name>/<model>` |
+
+For the last two rows, add the full model id to the provider's **Models** field in Opik. Opik only routes a `custom-llm/…` model to a provider that lists it.
+
+`aoa-ids install opik` and `aoa-ids status opik` run a **provider check**. If no configured provider can serve the model, they print a warning, because Opik would accept the rule and then never score a trace. The smoke test is the final proof.
+
+With a self-hosted Opik and a self-hosted model, traces never leave your network.
+
+**Validate the model first.** Only the models in the table above have been validated. Point the reference runner at the same endpoint and run the fixtures:
+
+```bash
+AOA_RUNNER_BASE_URL=http://vllm.internal:8000/v1 AOA_RUNNER_API_KEY=… \
+  python scripts/validate_judge.py --model Qwen/Qwen3-32B --profile profiles/generic.md
+```
+
+- **Agent mode needs tool calling.** If your model can't call tools reliably, set `AOA_JUDGE_MODE=mapped`.
+- **Decision models (Jev) are served only through OpenRouter.**
+- Check `aoa-ids coverage opik` after the switch. A model that refuses attack payloads or runs out of context shows up there as unscored traces.
+
 ## Modes (chat models)
 
 | `AOA_JUDGE_MODE` | How the judge sees the trace | Use when |
