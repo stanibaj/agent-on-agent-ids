@@ -13,7 +13,7 @@ agent-on-agent-ids (AOA-IDS) is intrusion detection for AI agents that use tools
 The judge is a portable spec built to run in any AI observability tool. Comet Opik is supported today with a one-command installer. Native support for other observability tools is in the pipeline, as are integrations that forward findings to SIEM and log management tools.
 
 <p align="center">
-  <img src="docs/assets/aoa-ids-architecture.png" alt="Where AOA-IDS sits: untrusted text (logs, web pages, tickets, PR comments) reaches your AI agents inside the agent runtime, where AOA-IDS adds nothing. The agents send traces to your AI observability tool (Comet Opik available; Langfuse and Arize Phoenix in the pipeline). The AOA-IDS judge agent reads every trace, links injected text to the action it caused, writes verdicts back, and sends alerts to PagerDuty, Slack, Telegram or a webhook; SIEM and log management (Splunk, Microsoft Sentinel, Elastic, Datadog) are in the pipeline." width="100%">
+  <img src="docs/assets/aoa-ids-architecture.png" alt="AOA-IDS, an AI judge agent, reads traces from AI observability tools (Opik, Langfuse, Phoenix) and, soon, logs from SIEM and log management tools (Splunk, Sentinel, Elastic), and sends alerts to alert management tools (PagerDuty, Slack)." width="100%">
 </p>
 
 ## Why you need it
